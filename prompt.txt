@@ -1,0 +1,15 @@
+-- Created table manually:
+-- If wishlist table is missing, create it manually
+CREATE TABLE wp_my_gift_registry_wishlists (
+    id int(11) NOT NULL AUTO_INCREMENT,
+    slug varchar(255) NOT NULL,
+    title varchar(255) NOT NULL,
+    description text,
+    user_id int(11) DEFAULT NULL,
+    user_email varchar(255) DEFAULT NULL,
+    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY slug (slug),
+    KEY user_id (user_id)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

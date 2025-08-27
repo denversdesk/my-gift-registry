@@ -1,0 +1,1999 @@
+/* My Gift Registry Styles */
+
+.my-gift-registry-wishlist {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.wishlist-header {
+    text-align: center;
+    margin-bottom: 85px;
+    padding: 30px;
+    background: url(../images/gifts-bg.jpg) no-repeat center center;
+    background-size: cover;
+    color: #442d16;
+    border-radius: 15px;
+}
+
+.wishlist-title {
+    font-size: 2.5em;
+    margin: 0 0 15px 0;
+    font-weight: 300;
+}
+
+.wishlist-description {
+    font-size: 1.2em;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.my-gift-registry-wishlist code {
+	display: block;
+	color: #6a0202;
+	font-weight: 700;
+}
+
+.share-url-info {
+	text-align: center;
+	margin-top: 17px;
+}
+
+.wishlist-share-buttons h3 {
+	text-align: center;
+	margin-bottom: 27px;
+}
+
+/* Share Buttons */
+.wishlist-share-buttons {
+    margin: 30px 0;
+}
+
+.wishlist-share-buttons h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.share-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    color: #495057;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.share-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.share-button.copy-link {
+    background: #28a745;
+    color: white;
+}
+
+.share-button.copy-link:hover {
+    background: #218838;
+}
+
+.share-button.whatsapp {
+    background: #25d366;
+    color: white;
+}
+
+.share-button.whatsapp:hover {
+    background: #128c7e;
+}
+
+.share-button.facebook {
+    background: #1877f2;
+    color: white;
+}
+
+.share-button.facebook:hover {
+    background: #166fe5;
+}
+
+.share-button.instagram {
+    background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    color: white;
+}
+
+.share-button.instagram:hover {
+    background: linear-gradient(45deg, #e0852e 0%,#d45f39 25%,#c82540 50%,#b81f63 75%,#a91785 100%);
+}
+
+.share-icon {
+    font-size: 16px;
+}
+
+/* Wishlist Items */
+.wishlist-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.gift-item {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.gift-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.gift-item.reserved {
+    opacity: 0.7;
+}
+
+.gift-item.reserved::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.8);
+    z-index: 1;
+}
+
+/* Gift Image */
+.gift-image {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+}
+
+.gift-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gift-item:hover .gift-image img {
+    transform: scale(1.05);
+}
+
+.no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4em;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.reserve-button {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+    z-index: 2;
+}
+
+.reserve-button:hover {
+    background: #218838;
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+}
+
+.reserved-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #dc3545;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+/* Gift Details */
+.gift-details {
+    padding: 25px;
+}
+
+.gift-title {
+    font-size: 1.3em;
+    margin: 0 0 15px 0;
+    color: #333;
+    font-weight: 600;
+}
+
+.gift-description {
+    color: #666;
+    margin: 0 0 15px 0;
+    line-height: 1.5;
+}
+
+.gift-price {
+    font-weight: 600;
+    color: #28a745;
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+}
+
+.gift-link {
+    margin: 0;
+}
+
+.buy-link {
+    color: #007cba;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.buy-link:hover {
+    color: #005a87;
+}
+
+/* No gifts message */
+.no-gifts {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-size: 1.2em;
+    background: #f8f9fa;
+    border-radius: 15px;
+    margin: 40px 0;
+}
+
+/* Reservation Modal */
+.reservation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 25px 30px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.gift-info {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.gift-info img {
+    max-width: 100px;
+    height: auto;
+    float: left;
+    margin-right: 15px;
+    border-radius: 8px;
+}
+
+.gift-info h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+}
+
+.gift-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+/* Form Styles */
+.reservation-form {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0,124,186,0.1);
+}
+
+.form-group input:invalid {
+    border-color: #dc3545;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.cancel-button,
+.reserve-submit-button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-button {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-button:hover {
+    background: #5a6268;
+}
+
+.reserve-submit-button {
+    background: #28a745;
+    color: white;
+}
+
+.reserve-submit-button:hover:not(:disabled) {
+    background: #218838;
+}
+
+.reserve-submit-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Error Messages */
+.my-gift-registry-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wishlist-items {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .share-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .share-button {
+        width: 200px;
+        justify-content: center;
+    }
+
+    .wishlist-title {
+        font-size: 2em;
+    }
+
+    .modal-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .gift-info img {
+        float: none;
+        display: block;
+        margin: 0 auto 15px;
+    }
+}
+
+/* Loading States */
+.reserve-button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.reserve-submit-button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Success Animation */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* My Wishlists Page Styles */
+.my-gift-registry-my-wishlists {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.my-gift-registry-my-wishlists .page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: url(../images/gifts-bg.jpg) no-repeat center center;
+    background-size: cover;
+    color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.my-gift-registry-my-wishlists .page-header h2 {
+    font-size: 2.5em;
+    margin: 0 0 15px 0;
+    font-weight: 300;
+}
+
+.my-gift-registry-my-wishlists .page-header p {
+    font-size: 1.2em;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.my-gift-registry-my-wishlists .create-new-button,
+.my-gift-registry-my-wishlists .create-first-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+    margin-top: 20px;
+}
+
+.my-gift-registry-my-wishlists .create-new-button:hover,
+.my-gift-registry-my-wishlists .create-first-button:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+}
+
+/* No wishlists message */
+.my-gift-registry-my-wishlists .no-wishlists {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    background: white;
+    border-radius: 15px;
+    margin: 40px 0;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.my-gift-registry-my-wishlists .no-wishlists h3 {
+    font-size: 1.5em;
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+/* Table Styles */
+.my-gift-registry-my-wishlists .wishlists-table-container {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.my-gift-registry-my-wishlists .wishlists-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.my-gift-registry-my-wishlists .wishlists-table thead {
+    background: #f8f9fa;
+}
+
+.my-gift-registry-my-wishlists .wishlists-table th {
+    padding: 20px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.my-gift-registry-my-wishlists .wishlists-table td {
+    padding: 20px 15px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.my-gift-registry-my-wishlists .wishlists-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.my-gift-registry-my-wishlists .wishlist-title-cell strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.my-gift-registry-my-wishlists .wishlist-title-cell a {
+    color: #007cba;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.my-gift-registry-my-wishlists .wishlist-title-cell a:hover {
+    color: #005a87;
+    text-decoration: underline;
+}
+
+.my-gift-registry-my-wishlists .wishlist-url {
+    color: #6c757d;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+/* Action Buttons */
+.my-gift-registry-my-wishlists .wishlist-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.my-gift-registry-my-wishlists .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.my-gift-registry-my-wishlists .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.my-gift-registry-my-wishlists .btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.my-gift-registry-my-wishlists .btn-success:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(40,167,69,0.3);
+}
+
+.my-gift-registry-my-wishlists .btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.my-gift-registry-my-wishlists .btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220,53,69,0.3);
+}
+
+/* Delete Modal */
+.my-gift-registry-my-wishlists .delete-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(2px);
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-content {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-header {
+    padding: 25px 30px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-close {
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-close:hover {
+    color: #333;
+    background: #f8f9fa;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-body {
+    padding: 30px;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-body p {
+    margin: 0 0 15px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .wishlist-title-confirm {
+    font-weight: 600;
+    color: #333;
+    margin: 10px 0;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .warning-text {
+    background: #fff3cd;
+    color: #856404;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ffeaa7;
+    margin: 20px 0;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .cancel-delete {
+    padding: 12px 25px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .cancel-delete:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.my-gift-registry-my-wishlists .delete-modal .confirm-delete {
+    padding: 12px 25px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.my-gift-registry-my-wishlists .delete-modal .confirm-delete:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(220,53,69,0.3);
+}
+
+/* Edit Form Styles */
+.my-gift-registry-edit-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.my-gift-registry-edit-form .form-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.my-gift-registry-edit-form .form-header h2 {
+    font-size: 2.5em;
+    margin: 0 0 15px 0;
+    font-weight: 300;
+}
+
+.my-gift-registry-edit-form .form-header p {
+    font-size: 1.2em;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.my-gift-registry-edit-form .wishlist-form {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.my-gift-registry-edit-form .form-section {
+    margin-bottom: 40px;
+}
+
+.my-gift-registry-edit-form .form-section h3 {
+    font-size: 1.5em;
+    margin: 0 0 25px 0;
+    color: #333;
+    font-weight: 500;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.my-gift-registry-edit-form .form-group {
+    margin-bottom: 25px;
+}
+
+.my-gift-registry-edit-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.my-gift-registry-edit-form .form-group input,
+.my-gift-registry-edit-form .form-group select {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    background: white;
+}
+
+.my-gift-registry-edit-form .form-group input:focus,
+.my-gift-registry-edit-form .form-group select:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0,124,186,0.1);
+}
+
+.my-gift-registry-edit-form .form-group input:invalid,
+.my-gift-registry-edit-form .form-group select:invalid {
+    border-color: #dc3545;
+}
+
+.my-gift-registry-edit-form .form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.my-gift-registry-edit-form .slug-status {
+    margin-top: 5px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.my-gift-registry-edit-form .slug-status.available {
+    color: #28a745;
+}
+
+.my-gift-registry-edit-form .slug-status.unavailable {
+    color: #dc3545;
+}
+
+.my-gift-registry-edit-form .url-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.my-gift-registry-edit-form .url-preview strong {
+    color: #333;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.my-gift-registry-edit-form #url-preview {
+    color: #007cba;
+    word-break: break-all;
+    font-family: monospace;
+}
+
+.my-gift-registry-edit-form #slug-preview {
+    font-weight: 600;
+}
+
+.my-gift-registry-edit-form .form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f8f9fa;
+}
+
+.my-gift-registry-edit-form .cancel-button {
+    padding: 15px 30px;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-block;
+    text-align: center;
+}
+
+.my-gift-registry-edit-form .cancel-button:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.my-gift-registry-edit-form .submit-button {
+    padding: 15px 30px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+}
+
+.my-gift-registry-edit-form .submit-button:hover:not(:disabled) {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+}
+
+.my-gift-registry-edit-form .submit-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.my-gift-registry-edit-form .form-status {
+    margin-top: 10px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+/* Login Required Message */
+.my-gift-registry-login-required {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.my-gift-registry-login-required .login-message {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.my-gift-registry-login-required h3 {
+    font-size: 2em;
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.my-gift-registry-login-required p {
+    color: #666;
+    margin: 0 0 30px 0;
+    font-size: 16px;
+}
+
+.my-gift-registry-login-required .login-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background: #007cba;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.my-gift-registry-login-required .login-button:hover {
+    background: #005a87;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,124,186,0.3);
+}
+
+.my-gift-registry-login-required a {
+    color: #007cba;
+    text-decoration: none;
+}
+
+.my-gift-registry-login-required a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design for Phase 3 */
+@media (max-width: 768px) {
+    .my-gift-registry-my-wishlists {
+        padding: 15px;
+    }
+
+    .my-gift-registry-my-wishlists .page-header {
+        padding: 20px;
+    }
+
+    .my-gift-registry-my-wishlists .page-header h2 {
+        font-size: 2em;
+    }
+
+    .my-gift-registry-my-wishlists .wishlists-table-container {
+        overflow-x: auto;
+    }
+
+    .my-gift-registry-my-wishlists .wishlists-table {
+        min-width: 600px;
+    }
+
+    .my-gift-registry-my-wishlists .wishlists-table th,
+    .my-gift-registry-my-wishlists .wishlists-table td {
+        padding: 15px 10px;
+    }
+
+    .my-gift-registry-my-wishlists .wishlist-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .my-gift-registry-my-wishlists .delete-modal .modal-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    .my-gift-registry-my-wishlists .delete-modal .modal-actions {
+        flex-direction: column;
+    }
+
+    .my-gift-registry-edit-form {
+        padding: 15px;
+    }
+
+    .my-gift-registry-edit-form .wishlist-form {
+        padding: 20px;
+    }
+
+    .my-gift-registry-edit-form .form-actions {
+        flex-direction: column;
+    }
+
+    .my-gift-registry-edit-form .form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Loading States */
+.my-gift-registry-my-wishlists .btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.my-gift-registry-edit-form .submit-button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Error Messages */
+.my-gift-registry-my-wishlists .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+    font-weight: 500;
+    margin: 20px 0;
+}
+
+/* Enhanced Form Field Styles for New Fields */
+.my-gift-registry-create-form .form-group input[type="date"],
+.my-gift-registry-edit-form .form-group input[type="date"],
+.my-gift-registry-create-form .form-group input[type="url"],
+.my-gift-registry-edit-form .form-group input[type="url"] {
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.my-gift-registry-create-form .form-group input[type="date"]:focus,
+.my-gift-registry-edit-form .form-group input[type="date"]:focus,
+.my-gift-registry-create-form .form-group input[type="url"]:focus,
+.my-gift-registry-edit-form .form-group input[type="url"]:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0,124,186,0.1);
+}
+
+.my-gift-registry-create-form .form-group textarea,
+.my-gift-registry-edit-form .form-group textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.my-gift-registry-create-form .form-group textarea:focus,
+.my-gift-registry-edit-form .form-group textarea:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0,124,186,0.1);
+}
+
+/* Profile Picture Upload Styles */
+.my-gift-registry-create-form .profile-pic-upload,
+.my-gift-registry-edit-form .profile-pic-upload {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.my-gift-registry-create-form .profile-pic-preview,
+.my-gift-registry-edit-form .profile-pic-preview {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f8f9fa;
+    transition: border-color 0.3s ease;
+}
+
+.my-gift-registry-create-form .profile-pic-preview:hover,
+.my-gift-registry-edit-form .profile-pic-preview:hover {
+    border-color: #007cba;
+}
+
+.my-gift-registry-create-form .no-image-placeholder,
+.my-gift-registry-edit-form .no-image-placeholder {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+}
+
+.my-gift-registry-create-form .profile-pic-buttons,
+.my-gift-registry-edit-form .profile-pic-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.my-gift-registry-create-form .upload-button,
+.my-gift-registry-edit-form .upload-button,
+.my-gift-registry-create-form .remove-button,
+.my-gift-registry-edit-form .remove-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.my-gift-registry-create-form .upload-button,
+.my-gift-registry-edit-form .upload-button {
+    background: #007cba;
+    color: white;
+}
+
+.my-gift-registry-create-form .upload-button:hover,
+.my-gift-registry-edit-form .upload-button:hover {
+    background: #005a87;
+    transform: translateY(-1px);
+}
+
+.my-gift-registry-create-form .remove-button,
+.my-gift-registry-edit-form .remove-button {
+    background: #dc3545;
+    color: white;
+}
+
+.my-gift-registry-create-form .remove-button:hover,
+.my-gift-registry-edit-form .remove-button:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Date Preview Styles */
+.my-gift-registry-create-form .date-preview,
+.my-gift-registry-edit-form .date-preview {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #e8f4fd;
+    border-radius: 6px;
+    border-left: 3px solid #007cba;
+}
+
+.my-gift-registry-create-form .date-preview small,
+.my-gift-registry-edit-form .date-preview small {
+    color: #333;
+    font-weight: 500;
+}
+
+.my-gift-registry-create-form .date-preview #formatted-date,
+.my-gift-registry-edit-form .date-preview #formatted-date {
+    color: #007cba;
+    font-weight: 600;
+}
+
+/* Wishlist Profile Picture Display */
+.wishlist-profile-pic {
+    margin-bottom: -95px;
+    position: relative;
+    z-index: 10;
+    pointer-events: none; /* Allow clicks through to underlying content */
+}
+
+.wishlist-profile-pic .profile-pic {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+
+.wishlist-profile-pic .profile-pic img {
+    width: 140px;
+    height: 140px;
+    border-radius: 70px;
+    border: solid 4px #fff;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    background: #f8f9fa; /* Fallback background */
+}
+
+.wishlist-profile-pic .profile-pic img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+/* Ensure profile picture appears above other elements */
+.wishlist-items {
+    position: relative;
+    z-index: 1;
+}
+
+/* Add subtle animation for the profile picture */
+@keyframes profilePicEntrance {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.wishlist-profile-pic .profile-pic img {
+    animation: profilePicEntrance 0.5s ease-out;
+}
+
+/* Responsive adjustments for new fields */
+@media (max-width: 768px) {
+    .my-gift-registry-create-form .form-group textarea,
+    .my-gift-registry-edit-form .form-group textarea {
+        min-height: 80px;
+    }
+
+    .my-gift-registry-create-form .profile-pic-upload,
+    .my-gift-registry-edit-form .profile-pic-upload {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .my-gift-registry-create-form .profile-pic-preview,
+    .my-gift-registry-edit-form .profile-pic-preview {
+        width: 100%;
+        height: 120px;
+        align-self: center;
+    }
+
+    .my-gift-registry-create-form .profile-pic-buttons,
+    .my-gift-registry-edit-form .profile-pic-buttons {
+        justify-content: center;
+    }
+
+    /* Mobile adjustments for wishlist profile pic */
+    .wishlist-profile-pic {
+        margin-bottom: -70px;
+    }
+
+    .wishlist-profile-pic .profile-pic img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50px;
+        border-width: 3px;
+    }
+}
+
+.gift-item.reserved .reserved-badge {
+    animation: successPulse 0.6s ease;
+}
+
+/* Create Wishlist Form Styles */
+.my-gift-registry-create-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.form-header h2 {
+    color: #333;
+    font-size: 2.2em;
+    margin-bottom: 10px;
+    font-weight: 300;
+}
+
+.form-header p {
+    color: #666;
+    font-size: 1.1em;
+}
+
+.form-section {
+    margin-bottom: 40px;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.form-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 3px rgba(0,124,186,0.1);
+}
+
+.form-group input:invalid {
+    border-color: #dc3545;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 13px;
+}
+
+.url-preview {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-top: 15px;
+}
+
+.url-preview strong {
+    color: #333;
+}
+
+#url-preview {
+    font-family: 'Courier New', monospace;
+    color: #007cba;
+    word-break: break-all;
+}
+
+.slug-status {
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.slug-status.success {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.slug-status.error {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.slug-status.loading {
+    color: #ffc107;
+    font-weight: 500;
+}
+
+/* Login Required Styles */
+.my-gift-registry-login-required {
+    max-width: 600px;
+    margin: 50px auto;
+    text-align: center;
+    padding: 40px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.login-message h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.login-message p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+.login-button {
+    display: inline-block;
+    background: #007cba;
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background: #0056b3;
+}
+
+/* Form Actions */
+.form-actions {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.submit-button {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: 25px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+}
+
+.submit-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+}
+
+.submit-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(108,117,125,0.3);
+}
+
+.form-status {
+    margin-top: 20px;
+    min-height: 40px;
+}
+
+.form-status.success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.form-status.error {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.form-status.loading {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+/* Responsive Design for Form */
+@media (max-width: 768px) {
+    .my-gift-registry-create-form {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .form-section {
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .form-header h2 {
+        font-size: 1.8em;
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+}
+
+/* Animation for form elements */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.form-section:nth-child(1) { animation-delay: 0.1s; }
+.form-section:nth-child(2) { animation-delay: 0.2s; }
+.form-actions { animation-delay: 0.3s; }
+
+/* My Wishlists Page Styles */
+.my-gift-registry-my-wishlists {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h2 {
+    color: #333;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    font-weight: 300;
+}
+
+.page-header p {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+}
+
+.create-new-button,
+.create-first-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40,167,69,0.3);
+}
+
+.create-new-button:hover,
+.create-first-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.4);
+}
+
+/* No wishlists state */
+.no-wishlists {
+    text-align: center;
+    padding: 80px 40px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    margin: 40px 0;
+}
+
+.no-wishlists h3 {
+    color: #333;
+    font-size: 1.8em;
+    margin-bottom: 15px;
+}
+
+.no-wishlists p {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 30px;
+}
+
+/* Wishlists table */
+.wishlists-table-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 30px 0;
+}
+
+.wishlists-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.wishlists-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.wishlists-table th,
+.wishlists-table td {
+    padding: 20px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.wishlists-table th {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.wishlists-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.wishlist-title-cell {
+    max-width: 300px;
+}
+
+.wishlist-title-cell strong {
+    display: block;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.wishlist-title-cell strong a {
+    color: #007cba;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.wishlist-title-cell strong a:hover {
+    color: #0056b3;
+}
+
+.wishlist-url {
+    color: #666;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+/* Wishlist actions */
+.wishlist-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.edit-button,
+.delete-button,
+.cancel-delete,
+.confirm-delete {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.edit-button {
+    background: #007cba;
+    color: white;
+}
+
+.edit-button:hover {
+    background: #0056b3;
+}
+
+.delete-button {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-button:hover {
+    background: #c82333;
+}
+
+.edit-button, .delete-button {
+	line-height: 1px;
+	padding: 13px 13px !important;
+	width: min-content;
+	position: inherit;
+}
+
+/* Delete Modal */
+.delete-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.delete-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+}
+
+.delete-modal .modal-content {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.delete-modal .modal-header {
+    padding: 25px 30px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delete-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.delete-modal .modal-close {
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-modal .modal-close:hover {
+    color: #333;
+}
+
+.delete-modal .modal-body {
+    padding: 30px;
+}
+
+.delete-modal .modal-body p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.wishlist-title-confirm {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #333;
+    margin: 15px 0;
+}
+
+.warning-text {
+    color: #dc3545;
+    font-weight: 600;
+    margin: 20px 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.cancel-delete {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-delete:hover {
+    background: #5a6268;
+}
+
+.confirm-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.confirm-delete:hover {
+    background: #c82333;
+}
+
+/* Error messages */
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+    font-weight: 500;
+    margin: 20px 0;
+}
+
+/* Responsive Design for Table */
+@media (max-width: 768px) {
+    .my-gift-registry-my-wishlists {
+        padding: 20px;
+    }
+
+    .page-header h2 {
+        font-size: 2em;
+    }
+
+    .wishlists-table-container {
+        overflow-x: auto;
+    }
+
+    .wishlists-table {
+        min-width: 600px;
+    }
+
+    .wishlist-actions {
+        flex-direction: column;
+        gap: 5px;
+        align-items: stretch;
+    }
+
+    .edit-button,
+    .delete-button {
+        text-align: center;
+        padding: 10px;
+    }
+
+    .delete-modal .modal-content {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+}
