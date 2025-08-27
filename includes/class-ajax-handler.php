@@ -25,6 +25,10 @@ class My_Gift_Registry_Ajax_Handler {
         add_action('wp_ajax_create_wishlist', array($this, 'create_wishlist'));
         add_action('wp_ajax_update_wishlist', array($this, 'update_wishlist'));
         add_action('wp_ajax_delete_wishlist', array($this, 'delete_wishlist'));
+
+        // Phase 4 AJAX actions for product management
+        add_action('wp_ajax_search_products', array($this, 'search_products'));
+        add_action('wp_ajax_add_product', array($this, 'add_product'));
     }
 
     /**
@@ -421,6 +425,102 @@ class My_Gift_Registry_Ajax_Handler {
         // Return success response
         wp_send_json_success(array(
             'message' => __('Wishlist deleted successfully!', 'my-gift-registry')
+        ));
+    }
+
+    /**
+     * Handle product search AJAX request
+     */
+    public function search_products() {
+        // Verify nonce for security
+        if (!wp_verify_nonce($_POST['nonce'], 'my_gift_registry_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            wp_send_json_error(__('You must be logged in to search products.', 'my-gift-registry'));
+            return;
+        }
+
+        $search_term = sanitize_text_field($_POST['search_term']);
+        $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 10;
+
+        if (empty($search_term)) {
+            wp_send_json_error(__('Search term is required.', 'my-gift-registry'));
+            return;
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $products = $db_handler->search_woocommerce_products($search_term, $limit);
+
+        wp_send_json_success(array(
+            'products' => $products
+        ));
+    }
+
+    /**
+     * Handle add product AJAX request
+     */
+    public function add_product() {
+        // Verify nonce for security
+        if (!wp_verify_nonce($_POST['nonce'], 'my_gift_registry_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            wp_send_json_error(__('You must be logged in to add products.', 'my-gift-registry'));
+            return;
+        }
+
+        $current_user = wp_get_current_user();
+        $wishlist_id = intval($_POST['wishlist_id']);
+
+        // Validate required fields
+        $title = sanitize_text_field($_POST['title']);
+        if (empty($title)) {
+            wp_send_json_error(__('Product title is required.', 'my-gift-registry'));
+            return;
+        }
+
+        if (empty($wishlist_id)) {
+            wp_send_json_error(__('Wishlist ID is required.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check if user owns the wishlist
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $wishlist = $db_handler->get_user_wishlist($wishlist_id, $current_user->ID);
+        if (!$wishlist) {
+            wp_send_json_error(__('Wishlist not found or access denied.', 'my-gift-registry'));
+            return;
+        }
+
+        // Prepare product data
+        $product_data = array(
+            'title' => $title,
+            'description' => isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : null,
+            'image_url' => isset($_POST['image_url']) ? esc_url_raw($_POST['image_url']) : null,
+            'product_url' => isset($_POST['product_url']) ? esc_url_raw($_POST['product_url']) : null,
+            'price' => isset($_POST['price']) ? floatval($_POST['price']) : null,
+            'priority' => isset($_POST['priority']) ? intval($_POST['priority']) : 0,
+        );
+
+        // Add product to wishlist
+        $result = $db_handler->add_product_to_wishlist($wishlist_id, $product_data);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+            return;
+        }
+
+        // Return success response
+        wp_send_json_success(array(
+            'message' => __('Product added successfully!', 'my-gift-registry'),
+            'product_id' => $result
         ));
     }
 }

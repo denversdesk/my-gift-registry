@@ -349,9 +349,9 @@ class My_Gift_Registry_DB_Handler {
                     '%s', // event_type
                     '%s', // event_date
                     '%s', // description
-                    '%s', // full_name
+                    '%s', // full_name 
                     '%s', // profile_pic
-                    '%d', // user_id
+                    '%d', // user_id 
                     '%s', // user_email
                 )
         );
@@ -443,6 +443,20 @@ class My_Gift_Registry_DB_Handler {
             'updated_at' => current_time('mysql')
         );
 
+        // Update wishlist
+        // Prepare data for update
+$update_data = array(
+    'title' => wp_kses($wishlist_data['title'], array()),
+    'slug' => $wishlist_data['slug'],
+    'event_type' => isset($wishlist_data['event_type']) ? sanitize_text_field($wishlist_data['event_type']) : null,
+    'event_date' => isset($wishlist_data['event_date']) ? sanitize_text_field($wishlist_data['event_date']) : null,
+    'description' => isset($wishlist_data['description']) ? sanitize_textarea_field($wishlist_data['description']) : null,
+    'full_name' => isset($wishlist_data['full_name']) ? sanitize_text_field($wishlist_data['full_name']) : null,
+    'profile_pic' => isset($wishlist_data['profile_pic']) ? esc_url_raw($wishlist_data['profile_pic']) : null,
+    'user_email' => isset($wishlist_data['user_email']) ? sanitize_email($wishlist_data['user_email']) : null,
+    'updated_at' => current_time('mysql')
+);
+
         // Define the correct format specifiers for the update data
         $update_formats = array(
             '%s', // title
@@ -489,23 +503,50 @@ class My_Gift_Registry_DB_Handler {
         global $wpdb;
 
         // Verify ownership
-        $wishlist = $this->get_user_wishlist($wishlist_id, $user_id);
-        if (!$wishlist) {
+        $existing_wishlist = $this->get_user_wishlist($wishlist_id, $user_id);
+        if (!$existing_wishlist) {
             return new WP_Error('not_found', __('Wishlist not found or access denied.', 'my-gift-registry'));
         }
 
-        // Delete wishlist
-        $result = $wpdb->delete(
-            $this->wishlist_table,
-            array('id' => $wishlist_id, 'user_id' => $user_id),
-            array('%d', '%d')
-        );
+        // Start transaction for data integrity
+        $wpdb->query('START TRANSACTION');
 
-        if ($result === false) {
-            return new WP_Error('db_error', __('Failed to delete wishlist.', 'my-gift-registry'));
+        try {
+            // Delete associated gifts first (due to foreign key constraints)
+            $gifts_table = $wpdb->prefix . 'my_gift_registry_gifts';
+            $wpdb->delete($gifts_table, array('wishlist_id' => $wishlist_id), array('%d'));
+
+            // Delete reservations
+            $reservations_table = $this->reservations_table;
+            $gift_ids = $wpdb->get_col(
+                $wpdb->prepare("SELECT id FROM {$gifts_table} WHERE wishlist_id = %d", $wishlist_id)
+            );
+
+            if (!empty($gift_ids)) {
+                $placeholders = implode(',', array_fill(0, count($gift_ids), '%d'));
+                $wpdb->query(
+                    $wpdb->prepare("DELETE FROM {$reservations_table} WHERE gift_id IN ({$placeholders})", $gift_ids)
+                );
+            }
+
+            // Delete the wishlist
+            $result = $wpdb->delete(
+                $this->wishlist_table,
+                array('id' => $wishlist_id, 'user_id' => $user_id),
+                array('%d', '%d')
+            );
+
+            if ($result === false) {
+                throw new Exception(__('Failed to delete wishlist.', 'my-gift-registry'));
+            }
+
+            $wpdb->query('COMMIT');
+            return true;
+
+        } catch (Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return new WP_Error('db_error', $e->getMessage());
         }
-
-        return true;
     }
 
     /**
@@ -533,21 +574,22 @@ class My_Gift_Registry_DB_Handler {
     }
 
     /**
-     * Get wishlist gifts
+     * Get gifts for a wishlist
      *
      * @param int $wishlist_id
      * @return array
      */
     public function get_wishlist_gifts($wishlist_id) {
         global $wpdb;
-
         $gifts_table = $wpdb->prefix . 'my_gift_registry_gifts';
+        $reservations_table = $this->reservations_table;
 
         $gifts = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT g.*, CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_reserved
+                "SELECT g.*,
+                    CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_reserved
                  FROM {$gifts_table} g
-                 LEFT JOIN {$this->reservations_table} r ON g.id = r.gift_id
+                 LEFT JOIN {$reservations_table} r ON g.id = r.gift_id
                  WHERE g.wishlist_id = %d
                  ORDER BY g.priority ASC, g.created_at ASC",
                 $wishlist_id
@@ -558,7 +600,7 @@ class My_Gift_Registry_DB_Handler {
     }
 
     /**
-     * Reserve gift
+     * Reserve a gift
      *
      * @param int $gift_id
      * @param string $email
@@ -567,34 +609,46 @@ class My_Gift_Registry_DB_Handler {
     public function reserve_gift($gift_id, $email) {
         global $wpdb;
 
+        // Check if gift is already reserved
+        $existing = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->reservations_table} WHERE gift_id = %d",
+                $gift_id
+            )
+        );
+
+        if ($existing > 0) {
+            return false; // Already reserved
+        }
+
+        // Insert reservation
         $result = $wpdb->insert(
             $this->reservations_table,
             array(
                 'gift_id' => $gift_id,
                 'email' => $email
-            ),
-            array('%d', '%s')
+            )
         );
 
         return $result !== false;
     }
 
     /**
-     * Get gift with wishlist
+     * Get gift by ID with wishlist info
      *
      * @param int $gift_id
      * @return object|null
      */
     public function get_gift_with_wishlist($gift_id) {
         global $wpdb;
-
         $gifts_table = $wpdb->prefix . 'my_gift_registry_gifts';
+        $wishlist_table = $this->wishlist_table;
 
         return $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT g.*, w.title as wishlist_title, w.slug as wishlist_slug
                  FROM {$gifts_table} g
-                 JOIN {$this->wishlist_table} w ON g.wishlist_id = w.id
+                 JOIN {$wishlist_table} w ON g.wishlist_id = w.id
                  WHERE g.id = %d",
                 $gift_id
             )

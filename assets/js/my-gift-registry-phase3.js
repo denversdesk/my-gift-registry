@@ -25,6 +25,7 @@
 
             // Modal close events
             $(document).on('click', '.modal-close, .modal-overlay, .cancel-button', this.closeModal.bind(this));
+            $(document).on('click', '#add-product-modal .modal-close, #add-product-modal .modal-overlay, #add-product-modal .cancel-button', this.closeAddProductModal.bind(this));
 
             // Form submission
             $(document).on('submit', '#reservation-form', this.handleFormSubmit.bind(this));
@@ -34,6 +35,19 @@
 
             // Share button functionality
             $(document).on('click', '.share-button.copy-link', this.copyLink.bind(this));
+
+            // Phase 4: Add Products functionality
+            $(document).on('click', '.add-products-button', this.handleAddProductsClick.bind(this));
+            $(document).on('input', '#product-search', this.handleProductSearch.bind(this));
+            $(document).on('click', '.product-search-item', this.handleProductSelect.bind(this));
+            $(document).on('submit', '#add-product-form', this.handleAddProductSubmit.bind(this));
+
+            // Close product search results when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#product-search, .product-search-results').length) {
+                    $('.product-search-results').hide();
+                }
+            });
 
             // Prevent modal close when clicking modal content
             $(document).on('click', '.modal-content', function(e) {
@@ -287,7 +301,204 @@
         handleKeyDown(e) {
             if (e.keyCode === 27) { // ESC key
                 this.closeModal();
+                this.closeAddProductModal();
             }
+        }
+
+        // Phase 4: Add Products functionality
+        handleAddProductsClick(e) {
+            e.preventDefault();
+
+            const $button = $(e.currentTarget);
+            const wishlistId = $button.data('wishlist-id');
+
+            if (!wishlistId) {
+                this.showError('Invalid wishlist selected.');
+                return;
+            }
+
+            // Store wishlist ID for later use
+            $('#add-product-form').data('wishlist-id', wishlistId);
+
+            // Show add product modal
+            this.showAddProductModal();
+        }
+
+        showAddProductModal() {
+            $('#add-product-modal').fadeIn(300);
+            $('body').addClass('modal-open');
+
+            // Focus search input
+            setTimeout(() => {
+                $('#product-search').focus();
+            }, 100);
+        }
+
+        closeAddProductModal() {
+            $('#add-product-modal').fadeOut(300);
+            $('body').removeClass('modal-open');
+
+            // Reset form
+            setTimeout(() => {
+                this.resetAddProductForm();
+            }, 300);
+        }
+
+        resetAddProductForm() {
+            const $form = $('#add-product-form');
+            $form[0].reset();
+            $form.removeData('wishlist-id');
+            $('.product-search-results').hide().empty();
+            $('.add-product-submit-button').removeClass('loading').prop('disabled', false);
+        }
+
+        handleProductSearch(e) {
+            const searchTerm = $(e.target).val().trim();
+
+            if (searchTerm.length < 2) {
+                $('.product-search-results').hide();
+                return;
+            }
+
+            // Debounce search
+            clearTimeout(this.searchTimer);
+            this.searchTimer = setTimeout(() => {
+                this.performProductSearch(searchTerm);
+            }, 300);
+        }
+
+        performProductSearch(searchTerm) {
+            const $results = $('.product-search-results');
+
+            $.ajax({
+                url: this.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'search_products',
+                    nonce: this.nonce,
+                    search_term: searchTerm
+                },
+                success: (response) => {
+                    if (response.success) {
+                        this.displayProductResults(response.data.products);
+                    } else {
+                        $results.hide();
+                    }
+                },
+                error: () => {
+                    $results.hide();
+                }
+            });
+        }
+
+        displayProductResults(products) {
+            const $results = $('.product-search-results');
+
+            if (!products || products.length === 0) {
+                $results.hide();
+                return;
+            }
+
+            let html = '';
+            products.forEach(product => {
+                const imageUrl = product.image_url || '';
+                const priceHtml = product.price_html || '';
+
+                html += `
+                    <div class="product-search-item" data-product='${JSON.stringify(product).replace(/'/g, "'")}'>
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${product.title}">` : '<div class="no-image">📦</div>'}
+                        <div class="product-search-item-info">
+                            <div class="product-search-item-title">${product.title}</div>
+                            ${priceHtml ? `<div class="product-search-item-price">${priceHtml}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            $results.html(html).show();
+        }
+
+        handleProductSelect(e) {
+            const $item = $(e.currentTarget);
+            const productData = JSON.parse($item.attr('data-product').replace(/'/g, "'"));
+
+            // Populate form fields
+            $('#product-title').val(productData.title);
+            $('#product-description').val(productData.description || '');
+            $('#product-price').val(productData.price || '');
+            $('#product-image-url').val(productData.image_url || '');
+            $('#product-url').val(productData.url || '');
+
+            // Hide results
+            $('.product-search-results').hide();
+
+            // Clear search
+            $('#product-search').val('');
+        }
+
+        handleAddProductSubmit(e) {
+            e.preventDefault();
+
+            const $form = $(e.currentTarget);
+            const $submitButton = $form.find('.add-product-submit-button');
+
+            // Basic validation
+            const title = $('#product-title').val().trim();
+            if (!title) {
+                this.showError('Product title is required.');
+                return;
+            }
+
+            // Show loading state
+            $submitButton.addClass('loading').prop('disabled', true);
+
+            // Get form data
+            const formData = {
+                action: 'add_product',
+                nonce: this.nonce,
+                wishlist_id: $form.data('wishlist-id'),
+                title: title,
+                description: $('#product-description').val().trim(),
+                price: $('#product-price').val(),
+                priority: $('#product-priority').val(),
+                image_url: $('#product-image-url').val().trim(),
+                product_url: $('#product-url').val().trim()
+            };
+
+            // Send AJAX request
+            $.ajax({
+                url: this.ajaxUrl,
+                type: 'POST',
+                data: formData,
+                success: this.handleAddProductSuccess.bind(this),
+                error: this.handleAddProductError.bind(this),
+                complete: () => {
+                    // Reset button state
+                    $submitButton.removeClass('loading').prop('disabled', false);
+                }
+            });
+        }
+
+        handleAddProductSuccess(response) {
+            if (response.success) {
+                // Show success message
+                this.showSuccess(response.data.message || 'Product added successfully!');
+
+                // Close modal after a delay
+                setTimeout(() => {
+                    this.closeAddProductModal();
+                    // Optionally reload the page to show the new product
+                    location.reload();
+                }, 2000);
+
+            } else {
+                this.showError(response.data || 'Failed to add product.');
+            }
+        }
+
+        handleAddProductError(xhr, status, error) {
+            console.error('Add product error:', error);
+            this.showError('An error occurred while adding the product. Please try again.');
         }
 
         showSuccess(message) {

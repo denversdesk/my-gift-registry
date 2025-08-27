@@ -123,6 +123,9 @@ class My_Gift_Registry_Shortcode_Handler {
         // Share buttons
         echo $this->render_share_buttons($wishlist);
 
+        // Add Products button (only for wishlist owner)
+        echo $this->render_add_products_button($wishlist);
+
         // Profile picture (if exists)
         if (!empty($wishlist->profile_pic)) {
             echo '<div class="wishlist-profile-pic">';
@@ -152,6 +155,9 @@ class My_Gift_Registry_Shortcode_Handler {
 
         // Reservation modal
         echo $this->render_reservation_modal();
+
+        // Product addition modal
+        echo $this->render_add_product_modal();
 
         return ob_get_clean();
     }
@@ -292,6 +298,108 @@ class My_Gift_Registry_Shortcode_Handler {
                             <button type="button" class="cancel-button"><?php _e('Cancel', 'my-gift-registry'); ?></button>
                             <button type="submit" class="reserve-submit-button" disabled>
                                 <?php _e('Reserve Gift', 'my-gift-registry'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render add products button for wishlist owners
+     *
+     * @param object $wishlist
+     * @return string
+     */
+    private function render_add_products_button($wishlist) {
+        // Only show button if user is logged in and owns the wishlist
+        if (!is_user_logged_in()) {
+            return '';
+        }
+
+        $current_user = wp_get_current_user();
+        if ($current_user->ID != $wishlist->user_id) {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <div class="add-products-section">
+            <button class="add-products-button" data-wishlist-id="<?php echo esc_attr($wishlist->id); ?>">
+                <span class="button-icon">+</span>
+                <?php _e('Add Products to Your Wishlist', 'my-gift-registry'); ?>
+            </button>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render add product modal
+     *
+     * @return string
+     */
+    private function render_add_product_modal() {
+        ob_start();
+        ?>
+        <div id="add-product-modal" class="add-product-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><?php _e('Add Product to Wishlist', 'my-gift-registry'); ?></h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="add-product-form" class="add-product-form">
+                        <div class="form-group">
+                            <label for="product-search"><?php _e('Search Sendlove.co.zw Products (optional)', 'my-gift-registry'); ?></label>
+                            <input type="text" id="product-search" name="product_search" placeholder="<?php _e('Type to search products...', 'my-gift-registry'); ?>">
+                            <div id="product-search-results" class="product-search-results" style="display: none;"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-title"><?php _e('Product Title', 'my-gift-registry'); ?> *</label>
+                            <input type="text" id="product-title" name="title" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-description"><?php _e('Description', 'my-gift-registry'); ?></label>
+                            <textarea id="product-description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="product-price"><?php _e('Price', 'my-gift-registry'); ?></label>
+                                <input type="number" id="product-price" name="price" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-priority"><?php _e('Priority', 'my-gift-registry'); ?></label>
+                                <select id="product-priority" name="priority">
+                                    <option value="0"><?php _e('Normal', 'my-gift-registry'); ?></option>
+                                    <option value="1"><?php _e('High', 'my-gift-registry'); ?></option>
+                                    <option value="2"><?php _e('Very High', 'my-gift-registry'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-image-url"><?php _e('Image URL', 'my-gift-registry'); ?></label>
+                            <input type="url" id="product-image-url" name="image_url">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="product-url"><?php _e('Product URL', 'my-gift-registry'); ?></label>
+                            <input type="url" id="product-url" name="product_url">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="cancel-button"><?php _e('Cancel', 'my-gift-registry'); ?></button>
+                            <button type="submit" class="add-product-submit-button">
+                                <?php _e('Add Product', 'my-gift-registry'); ?>
                             </button>
                         </div>
                     </form>
