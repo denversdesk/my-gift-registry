@@ -387,8 +387,18 @@ class My_Gift_Registry_Shortcode_Handler {
                         </div>
 
                         <div class="form-group">
-                            <label for="product-image-url"><?php _e('Image URL', 'my-gift-registry'); ?></label>
-                            <input type="url" id="product-image-url" name="image_url">
+                            <label for="product-image-url"><?php _e('Product Image', 'my-gift-registry'); ?></label>
+                            <div class="image-upload-section">
+                                <div class="image-preview" id="product-image-preview" style="display: none;">
+                                    <img id="product-image-thumb" src="" alt="Product Image" style="max-width: 100px; height: auto;">
+                                    <button type="button" class="remove-image-button" title="Remove Image">×</button>
+                                </div>
+                                <input type="hidden" id="product-image-url" name="image_url" value="">
+                                <button type="button" class="choose-image-button" id="choose-product-image">
+                                    <?php _e('Choose Image', 'my-gift-registry'); ?>
+                                </button>
+                                <p class="image-help"><?php _e('Upload a new image or select from your media library', 'my-gift-registry'); ?></p>
+                            </div>
                         </div>
 
                         <div class="form-group">

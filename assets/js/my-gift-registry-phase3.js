@@ -42,6 +42,10 @@
             $(document).on('click', '.product-search-item', this.handleProductSelect.bind(this));
             $(document).on('submit', '#add-product-form', this.handleAddProductSubmit.bind(this));
 
+            // Media manager functionality
+            $(document).on('click', '.choose-image-button', this.handleChooseImage.bind(this));
+            $(document).on('click', '.remove-image-button', this.handleRemoveImage.bind(this));
+
             // Close product search results when clicking outside
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('#product-search, .product-search-results').length) {
@@ -350,6 +354,9 @@
             $form.removeData('wishlist-id');
             $('.product-search-results').hide().empty();
             $('.add-product-submit-button').removeClass('loading').prop('disabled', false);
+
+            // Clear image preview
+            this.updateImagePreview('');
         }
 
         handleProductSearch(e) {
@@ -426,8 +433,10 @@
             $('#product-title').val(productData.title);
             $('#product-description').val(productData.description || '');
             $('#product-price').val(productData.price || '');
-            $('#product-image-url').val(productData.image_url || '');
             $('#product-url').val(productData.url || '');
+
+            // Update image preview with WooCommerce product image
+            this.updateImagePreview(productData.image_url || '');
 
             // Hide results
             $('.product-search-results').hide();
@@ -499,6 +508,89 @@
         handleAddProductError(xhr, status, error) {
             console.error('Add product error:', error);
             this.showError('An error occurred while adding the product. Please try again.');
+        }
+
+        // Media Manager functionality
+        handleChooseImage(e) {
+            e.preventDefault();
+
+            const $button = $(e.currentTarget);
+            const $preview = $('#product-image-preview');
+            const $thumb = $('#product-image-thumb');
+            const $urlInput = $('#product-image-url');
+
+            // Create or reuse media frame
+            if (!this.mediaFrame) {
+                this.mediaFrame = wp.media({
+                    title: 'Select Product Image',
+                    button: {
+                        text: 'Use this image'
+                    },
+                    multiple: false,
+                    library: {
+                        type: 'image',
+                        author: wp.media.view.settings.post.id || 0 // Restrict to current user's uploads
+                    }
+                });
+
+                // Handle image selection
+                this.mediaFrame.on('select', () => {
+                    const attachment = this.mediaFrame.state().get('selection').first().toJSON();
+
+                    // Update hidden input with image URL
+                    $urlInput.val(attachment.url);
+
+                    // Update preview
+                    $thumb.attr('src', attachment.url);
+                    $preview.show();
+
+                    // Update choose button text
+                    $button.text('Replace Image');
+                });
+            }
+
+            // Open the media frame
+            this.mediaFrame.open();
+        }
+
+        handleRemoveImage(e) {
+            e.preventDefault();
+
+            const $preview = $('#product-image-preview');
+            const $thumb = $('#product-image-thumb');
+            const $urlInput = $('#product-image-url');
+            const $button = $('.choose-image-button');
+
+            // Clear the image URL
+            $urlInput.val('');
+
+            // Hide preview
+            $preview.hide();
+
+            // Reset button text
+            $button.text('Choose Image');
+
+            // Clear thumbnail
+            $thumb.attr('src', '');
+        }
+
+        updateImagePreview(imageUrl) {
+            const $preview = $('#product-image-preview');
+            const $thumb = $('#product-image-thumb');
+            const $urlInput = $('#product-image-url');
+            const $button = $('.choose-image-button');
+
+            if (imageUrl) {
+                $urlInput.val(imageUrl);
+                $thumb.attr('src', imageUrl);
+                $preview.show();
+                $button.text('Replace Image');
+            } else {
+                $urlInput.val('');
+                $preview.hide();
+                $button.text('Choose Image');
+                $thumb.attr('src', '');
+            }
         }
 
         showSuccess(message) {
@@ -1311,6 +1403,9 @@
 
             // Call the function for the second element
             replaceCodeWithDiv('.my-gift-registry-edit-form');
+
+            // Call the function for the third element
+            replaceCodeWithDiv('.my-gift-registry-login-required');
         });
 
 })(jQuery);

@@ -66,11 +66,11 @@ class My_Gift_Registry_My_Wishlists_Handler {
             <div class="login-message">
                 <h3><?php _e('My Wish Lists', 'my-gift-registry'); ?></h3>
                 <p><?php _e('You must be logged in to view your wishlists.', 'my-gift-registry'); ?></p>
-                <a href="<?php echo wp_login_url(get_permalink()); ?>" class="login-button">
+                <a href="<?php echo get_permalink( get_option('woocommerce_myaccount_page_id') ); ?>?redirect_to=<?php echo get_permalink(); ?>" class="login-button">
                     <?php _e('Log In', 'my-gift-registry'); ?>
                 </a>
                 <p><?php _e('Don\'t have an account?', 'my-gift-registry'); ?>
-                   <a href="<?php echo wp_registration_url(); ?>"><?php _e('Register here', 'my-gift-registry'); ?></a>
+                   <a href="<?php echo get_permalink( get_option('woocommerce_myaccount_page_id') ); ?>?redirect_to=<?php echo get_permalink(); ?>"><?php _e('Register here', 'my-gift-registry'); ?></a>
                 </p>
             </div>
         </div>

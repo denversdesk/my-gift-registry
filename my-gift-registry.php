@@ -343,7 +343,7 @@ class My_Gift_Registry {
             );
 
             // Enqueue WordPress media scripts for media manager
-            if ($has_create_form_shortcode || $has_my_wishlists_shortcode) {
+            if ($has_wishlist_shortcode || $has_create_form_shortcode || $has_my_wishlists_shortcode) {
                 wp_enqueue_media();
                 wp_enqueue_script('jquery-ui-datepicker');
             }
