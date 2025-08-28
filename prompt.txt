@@ -1,68 +1,7 @@
-Create Phase 4 of the "My Gift Registry" WordPress plugin. This phase adds the ability for logged-in users to add products to a specific wishlist. Follow WordPress coding standards (PHP, JS, CSS, AJAX, shortcodes).
+- Next tasks
 
-Requirements for Phase 4:
+1. Admin addition of featured products that will be chosen and sent together with the email as "Recommended Products"
 
-1. Add Products Button
+2. Display of event date and the Countdown
 
-* When a logged-in user views one of their own wishlists at [https://sitename.com/mywishlist/{slug}](https://sitename.com/mywishlist/{slug}), display a button in the header: "+ Add Products to Your Wishlist".
-* The button should only appear for the wishlist owner (match wishlist.user\_id with current user).
-
-2. Popup Form
-
-* Clicking the button should open a responsive popup form.
-* The form should capture the following product details:
-
-  * title (autocomplete WooCommerce product search box)
-  * description (textarea)
-  * image\_url (hidden or text field, auto-filled if WooCommerce product chosen)
-  * product\_url (hidden or text field, auto-filled if WooCommerce product chosen)
-  * price (number or text, auto-filled if WooCommerce product chosen)
-
-3. Autocomplete WooCommerce Search
-
-* As the user types in the title field, perform an AJAX search of WooCommerce products by product name.
-* Show a dropdown result list:
-
-  * Small thumbnail on the left
-  * Product name on the right
-  * Product price below the product name
-* If a suggestion is clicked:
-
-  * Auto-fill the form fields with product details (title, short description, image\_url, product\_url, price).
-
-4. Save Product
-
-* On form submission, save the product details to a new database table (wishlist\_items) linked to the wishlist ID. Suggested table schema:
-
-  * id (primary key, auto increment)
-  * wishlist\_id (foreign key referencing wishlist table id)
-  * title
-  * description
-  * image\_url
-  * product\_url
-  * price
-  * reserved\_by (nullable, for Phase 1 reservation feature)
-  * created\_at, updated\_at
-* Save via AJAX.
-* On success:
-
-  * Show a success notice
-  * Reload the page to show the updated wishlist.
-* On failure:
-
-  * Show an error message, keep form open.
-
-5. Security & Validation
-
-* Only the wishlist owner can add products.
-* Use nonces for AJAX requests.
-* Validate and sanitize all input.
-
-6. Code Quality
-
-* Write modular, commented code.
-* Use proper WordPress AJAX handlers (wp\_ajax\_\*).
-* Return JSON responses for AJAX actions.
-* Ensure responsive popup works well on desktop and mobile.
-
-Generate the complete code for Phase 4 only.
+3. Reminder to buy + opt out (unsubscribe) sent

@@ -748,20 +748,21 @@
 }
 
 .remove-image-button {
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
+	background: #dc3545;
+	color: white;
+	border: none;
+	border-radius: 50%;
+	width: 29px;
+	height: 29px;
+	cursor: pointer;
+	font-size: 22px;
+	font-weight: 600;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.3s ease;
+	padding: 0;
 }
 
 .remove-image-button:hover {
@@ -826,6 +827,28 @@
         float: none;
         display: block;
         margin: 0 auto 15px;
+    }
+
+    /* Mobile image upload styles */
+    .image-preview {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .image-preview img {
+        max-width: 80px;
+        height: auto;
+    }
+
+    .choose-image-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    .image-help {
+        font-size: 11px;
     }
 }
 
