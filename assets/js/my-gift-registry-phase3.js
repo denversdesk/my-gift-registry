@@ -1215,6 +1215,9 @@
 
                     self.closeDeleteModal();
 
+                    // Reset button state
+                    $confirmButton.prop('disabled', false).text('Delete Wishlist');
+
                 } else {
                     self.showMessage('✗ ' + response.data, 'error');
                     $confirmButton.prop('disabled', false).text('Delete Wishlist');
