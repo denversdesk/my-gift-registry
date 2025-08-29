@@ -84,6 +84,9 @@ class My_Gift_Registry {
         $db_handler = new My_Gift_Registry_DB_Handler();
         $db_handler->create_tables();
 
+        // Create required pages
+        $this->create_required_pages();
+
         // Flush rewrite rules
         $rewrite_handler = new My_Gift_Registry_Rewrite_Handler();
         $rewrite_handler->register_rewrite_rules();
@@ -94,6 +97,84 @@ class My_Gift_Registry {
 
         // Force flush rewrite rules on next admin init
         set_transient('my_gift_registry_flush_rewrite_rules', true);
+    }
+
+    /**
+     * Create required pages on activation
+     */
+    private function create_required_pages() {
+        // Define the pages to create
+        $pages = array(
+            array(
+                'title' => 'Gift Registry - My Wishlists',
+                'content' => '[my_wishlists]',
+                'slug' => 'my-wishlists'
+            ),
+            array(
+                'title' => 'Gift Registry - Create Wish List',
+                'content' => '[create_wishlist_form]',
+                'slug' => 'create-wishlist'
+            )
+        );
+
+        // Create each page if it doesn't exist
+        foreach ($pages as $page_data) {
+            $this->create_page_if_not_exists($page_data);
+        }
+    }
+
+    /**
+     * Create a page if it doesn't already exist
+     *
+     * @param array $page_data Page data with title, content, and slug
+     */
+    private function create_page_if_not_exists($page_data) {
+        // Check if page already exists by title
+        $existing_page = $this->get_page_by_title($page_data['title']);
+
+        if ($existing_page) {
+            // Page already exists, log and skip
+            error_log('My Gift Registry: Page "' . $page_data['title'] . '" already exists (ID: ' . $existing_page->ID . ')');
+            return;
+        }
+
+        // Create new page
+        $page_args = array(
+            'post_title'    => $page_data['title'],
+            'post_content'  => $page_data['content'],
+            'post_name'     => $page_data['slug'],
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
+            'post_author'   => get_current_user_id() ?: 1, // Use current user or admin if not logged in
+            'comment_status' => 'closed', // Disable comments on plugin pages
+            'ping_status'   => 'closed',  // Disable pingbacks/trackbacks
+        );
+
+        $page_id = wp_insert_post($page_args);
+
+        if (is_wp_error($page_id)) {
+            error_log('My Gift Registry: Failed to create page "' . $page_data['title'] . '": ' . $page_id->get_error_message());
+        } else {
+            error_log('My Gift Registry: Successfully created page "' . $page_data['title'] . '" (ID: ' . $page_id . ')');
+        }
+    }
+
+    /**
+     * Get page by title
+     *
+     * @param string $page_title Page title to search for
+     * @return WP_Post|null
+     */
+    private function get_page_by_title($page_title) {
+        $pages = get_posts(array(
+            'post_type'      => 'page',
+            'title'          => $page_title,
+            'post_status'    => 'any', // Include all statuses
+            'posts_per_page' => 1,
+            'fields'         => 'all'
+        ));
+
+        return !empty($pages) ? $pages[0] : null;
     }
 
     /**
