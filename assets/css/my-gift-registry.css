@@ -30,6 +30,56 @@
     color: #000000;
 }
 
+/* Event Date Section */
+.event-date-section {
+	text-align: center;
+	margin: 11px 0 -23px;
+}
+
+.event-date-display {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+
+.event-date-display span {
+    font-weight: 400;
+}
+
+.event-countdown {
+	font-size: 15px;
+	font-weight: 500;
+	color: #045316;
+	background: rgba(40, 167, 69, 0.21);
+	padding: 8px 16px;
+	border-radius: 20px;
+	display: inline-block;
+	border: 1px solid rgba(40, 167, 69, 0.2);
+	padding-bottom: 8px;
+	margin-left: 19px;
+}
+
+.event-countdown.past {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.2);
+}
+
+.event-countdown.today {
+    color: #ffc107;
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 .my-gift-registry-wishlist code {
 	display: block;
 	color: #6a0202;
@@ -850,6 +900,21 @@
 
     .image-help {
         font-size: 11px;
+    }
+
+    /* Mobile event date styles */
+    .event-date-section {
+        margin: 20px 0;
+        padding: 20px;
+    }
+
+    .event-date-display {
+        font-size: 1.2em;
+    }
+
+    .event-countdown {
+        font-size: 1em;
+        padding: 6px 12px;
     }
 }
 

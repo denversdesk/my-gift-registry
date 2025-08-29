@@ -120,6 +120,9 @@ class My_Gift_Registry_Shortcode_Handler {
             echo '<p class="wishlist-description">' . esc_html($wishlist->description) . '</p>';
         }
 
+        // Event date and countdown (only if event_date is set)
+        echo $this->render_event_date_section($wishlist);
+
         // Share buttons
         echo $this->render_share_buttons($wishlist);
 
@@ -184,23 +187,23 @@ class My_Gift_Registry_Shortcode_Handler {
             <h3><?php _e('Share this wishlist', 'my-gift-registry'); ?></h3>
             <div class="share-buttons">
                 <button class="share-button copy-link" data-url="<?php echo esc_url($current_url); ?>">
-                    <span class="share-icon">📋</span>
-                    <?php _e('Copy Link', 'my-gift-registry'); ?>
+                    <span class="share-icon"><i class="fa fa-link"></i></span>
+                    <span class="social-button-text"><?php _e('Copy Link', 'my-gift-registry'); ?></span>
                 </button>
                 <a href="https://wa.me/?text=<?php echo urlencode($share_text . ' ' . $current_url); ?>"
                    class="share-button whatsapp" target="_blank">
-                    <span class="share-icon">💬</span>
-                    WhatsApp
+                    <span class="share-icon"><i class="fa fa-whatsapp"></i></span>
+                    <span class="social-button-text">WhatsApp</span>
                 </a>
                 <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode($current_url); ?>"
                    class="share-button facebook" target="_blank">
-                    <span class="share-icon">📘</span>
-                    Facebook
+                    <span class="share-icon"><i class="fa fa-facebook"></i></span>
+                    <span class="social-button-text">Facebook</span>
                 </a>
                 <a href="https://www.instagram.com/?url=<?php echo urlencode($current_url); ?>"
                    class="share-button instagram" target="_blank">
-                    <span class="share-icon">📷</span>
-                    Instagram
+                    <span class="share-icon"><i class="fa fa-instagram"></i></span>
+                    <span class="social-button-text">Instagram</span>
                 </a>
             </div>
             <div class="share-url-info">
@@ -415,6 +418,58 @@ class My_Gift_Registry_Shortcode_Handler {
                     </form>
                 </div>
             </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render event date and countdown section
+     *
+     * @param object $wishlist
+     * @return string
+     */
+    private function render_event_date_section($wishlist) {
+        // Only show if event_date is set
+        if (empty($wishlist->event_date)) {
+            return '';
+        }
+
+        // Parse the event date
+        $event_date = strtotime($wishlist->event_date);
+        if (!$event_date) {
+            return '';
+        }
+
+        // Format the date for display
+        $formatted_date = date_i18n(get_option('date_format'), $event_date);
+
+        // Calculate days until event
+        $current_time = current_time('timestamp');
+        $days_until = ceil(($event_date - $current_time) / (60 * 60 * 24));
+
+        // Determine the countdown message
+        if ($days_until > 0) {
+            $countdown_text = sprintf(
+                _n('%d day to go', '%d days to go', $days_until, 'my-gift-registry'),
+                $days_until
+            );
+        } elseif ($days_until === 0) {
+            $countdown_text = __('Today!', 'my-gift-registry');
+        } else {
+            $countdown_text = __('Event has passed', 'my-gift-registry');
+        }
+
+        ob_start();
+        ?>
+        <div class="event-date-section" data-event-date="<?php echo esc_attr($wishlist->event_date); ?>">
+            <div class="event-date-display">
+                Date: <span><?php echo esc_html($formatted_date); ?></span>
+                <div class="event-countdown">
+                    <?php echo esc_html($countdown_text); ?>
+                </div>
+            </div>
+            
         </div>
         <?php
         return ob_get_clean();

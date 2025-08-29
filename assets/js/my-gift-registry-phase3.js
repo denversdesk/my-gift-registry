@@ -25,6 +25,9 @@
 
             // Modal close events
             $(document).on('click', '.modal-close, .modal-overlay, .cancel-button', this.closeModal.bind(this));
+
+            // Initialize countdown timers on page load
+            this.initializeCountdownTimers();
             $(document).on('click', '#add-product-modal .modal-close, #add-product-modal .modal-overlay, #add-product-modal .cancel-button', this.closeAddProductModal.bind(this));
 
             // Form submission
@@ -307,6 +310,57 @@
                 this.closeModal();
                 this.closeAddProductModal();
             }
+        }
+
+        // Countdown Timer functionality
+        initializeCountdownTimers() {
+            const $eventSections = $('.event-date-section');
+
+            if ($eventSections.length === 0) {
+                return;
+            }
+
+            $eventSections.each((index, element) => {
+                const $section = $(element);
+                const eventDate = $section.data('event-date');
+
+                if (eventDate) {
+                    this.startCountdownTimer($section, eventDate);
+                }
+            });
+        }
+
+        startCountdownTimer($section, eventDateString) {
+            const updateCountdown = () => {
+                const now = new Date().getTime();
+                const eventDate = new Date(eventDateString).getTime();
+                const timeLeft = eventDate - now;
+
+                const $countdown = $section.find('.event-countdown');
+
+                if (timeLeft > 0) {
+                    const days = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+
+                    let message;
+                    if (days === 1) {
+                        message = '1 day to go';
+                    } else {
+                        message = days + ' days to go';
+                    }
+
+                    $countdown.removeClass('past today').text(message);
+                } else if (timeLeft === 0 || (timeLeft > -86400000 && timeLeft < 0)) { // Within 24 hours
+                    $countdown.removeClass('past').addClass('today').text('Today!');
+                } else {
+                    $countdown.removeClass('today').addClass('past').text('Event has passed');
+                }
+            };
+
+            // Update immediately
+            updateCountdown();
+
+            // Update every minute
+            setInterval(updateCountdown, 60000);
         }
 
         // Phase 4: Add Products functionality
