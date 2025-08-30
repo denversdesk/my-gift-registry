@@ -23,12 +23,18 @@ class My_Gift_Registry_DB_Handler {
     private $reservations_table;
 
     /**
+     * Event types table name
+     */
+    private $event_types_table;
+
+    /**
      * Constructor
      */
     public function __construct() {
         global $wpdb;
         $this->wishlist_table = $wpdb->prefix . 'my_gift_registry_wishlists';
         $this->reservations_table = $wpdb->prefix . 'my_gift_registry_reservations';
+        $this->event_types_table = $wpdb->prefix . 'my_gift_registry_event_types';
     }
 
     /**
@@ -100,6 +106,22 @@ class My_Gift_Registry_DB_Handler {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
+        // Event types table
+        $event_types_table = $wpdb->prefix . 'my_gift_registry_event_types';
+        $event_types_sql = "CREATE TABLE {$event_types_table} (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            slug varchar(100) NOT NULL,
+            name varchar(100) NOT NULL,
+            description text,
+            sort_order int(11) DEFAULT 0,
+            is_active tinyint(1) DEFAULT 1,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY slug (slug),
+            KEY sort_order (sort_order),
+            KEY is_active (is_active)
+        ) $charset_collate;";
+
         // Create tables one by one with error checking
         $result1 = dbDelta($wishlist_sql);
         error_log('My Gift Registry: Wishlist table creation result: ' . print_r($result1, true));
@@ -113,19 +135,28 @@ class My_Gift_Registry_DB_Handler {
         $result4 = dbDelta($reservations_sql);
         error_log('My Gift Registry: Reservations table creation result: ' . print_r($result4, true));
 
+        $result5 = dbDelta($event_types_sql);
+        error_log('My Gift Registry: Event types table creation result: ' . print_r($result5, true));
+
         // Check if tables exist after creation
         $wishlist_exists = $this->table_exists($this->wishlist_table);
         $gifts_exists = $this->table_exists($gifts_table);
         $recommended_exists = $this->table_exists($recommended_products_table);
         $reservations_exists = $this->table_exists($this->reservations_table);
+        $event_types_exists = $this->table_exists($this->event_types_table);
 
-        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Recommended: ' . ($recommended_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No'));
+        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Recommended: ' . ($recommended_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No') . ', EventTypes: ' . ($event_types_exists ? 'Yes' : 'No'));
 
         // Insert sample data for testing only if wishlist table exists
         if ($wishlist_exists) {
             $this->insert_sample_data();
         } else {
             error_log('My Gift Registry: Skipping sample data insertion because wishlist table does not exist');
+        }
+
+        // Insert default event types
+        if ($event_types_exists) {
+            $this->insert_default_event_types();
         }
     }
 
@@ -932,5 +963,280 @@ class My_Gift_Registry_DB_Handler {
         }
 
         return $products;
+    }
+
+    /**
+     * Insert default event types if not already present
+     */
+    private function insert_default_event_types() {
+        global $wpdb;
+
+        // Check if we already have event types
+        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->event_types_table}");
+        if ($count > 0) {
+            return;
+        }
+
+        $default_event_types = array(
+            array(
+                'slug' => 'wedding',
+                'name' => 'Wedding',
+                'description' => 'Celebrate the union of two people in love',
+                'sort_order' => 10
+            ),
+            array(
+                'slug' => 'anniversary',
+                'name' => 'Anniversary',
+                'description' => 'Celebrate years of love and commitment',
+                'sort_order' => 20
+            ),
+            array(
+                'slug' => 'birthday',
+                'name' => 'Birthday',
+                'description' => 'Celebrate someone\'s special day',
+                'sort_order' => 30
+            ),
+            array(
+                'slug' => 'baby-shower',
+                'name' => 'Baby Shower',
+                'description' => 'Celebrate the arrival of a new baby',
+                'sort_order' => 40
+            ),
+            array(
+                'slug' => 'kitchen-party',
+                'name' => 'Kitchen Party',
+                'description' => 'Celebrate new homeowners with kitchen essentials',
+                'sort_order' => 50
+            ),
+            array(
+                'slug' => 'graduation',
+                'name' => 'Graduation',
+                'description' => 'Celebrate academic achievements',
+                'sort_order' => 60
+            ),
+            array(
+                'slug' => 'housewarming',
+                'name' => 'Housewarming',
+                'description' => 'Welcome someone to their new home',
+                'sort_order' => 70
+            ),
+            array(
+                'slug' => 'retirement',
+                'name' => 'Retirement',
+                'description' => 'Celebrate a well-deserved retirement',
+                'sort_order' => 80
+            )
+        );
+
+        foreach ($default_event_types as $event_type) {
+            $result = $wpdb->insert($this->event_types_table, $event_type);
+            if ($result === false) {
+                error_log('My Gift Registry: Failed to insert default event type "' . $event_type['name'] . '": ' . $wpdb->last_error);
+            }
+        }
+
+        // Migrate existing wishlist event types after creating new ones
+        $this->migrate_legacy_event_types();
+    }
+
+    /**
+     * Migrate legacy event type names to new slugs for backward compatibility
+     */
+    private function migrate_legacy_event_types() {
+        global $wpdb;
+
+        // Mapping of old capitalized names to new slugs
+        $legacy_mapping = array(
+            'Wedding' => 'wedding',
+            'Anniversary' => 'anniversary',
+            'Birthday' => 'birthday',
+            'Kitchen Party' => 'kitchen-party',
+            'Baby Shower' => 'baby-shower'
+        );
+
+        foreach ($legacy_mapping as $old_name => $new_slug) {
+            // Update existing wishlists that have the old event type name
+            $result = $wpdb->update(
+                $this->wishlist_table,
+                array('event_type' => $new_slug),
+                array('event_type' => $old_name)
+            );
+
+            if ($result !== false && $result > 0) {
+                error_log('My Gift Registry: Migrated ' . $result . ' wishlists from "' . $old_name . '" to "' . $new_slug . '"');
+            }
+
+            // Also update recommended products (though they should have lowercase already, but just in case)
+            $result2 = $wpdb->update(
+                $this->recommended_products_table,
+                array('event_type' => $new_slug),
+                array('event_type' => $old_name)
+            );
+
+            if ($result2 !== false && $result2 > 0) {
+                error_log('My Gift Registry: Migrated ' . $result2 . ' recommended products from "' . $old_name . '" to "' . $new_slug . '"');
+            }
+        }
+    }
+
+    /**
+     * Get all active event types
+     *
+     * @return array
+     */
+    public function get_active_event_types() {
+        global $wpdb;
+
+        $results = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->event_types_table} WHERE is_active = %d ORDER BY sort_order ASC, name ASC",
+                1
+            )
+        );
+
+        return $results ?: array();
+    }
+
+    /**
+     * Get event type by slug
+     *
+     * @param string $slug
+     * @return object|null
+     */
+    public function get_event_type_by_slug($slug) {
+        global $wpdb;
+
+        return $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->event_types_table} WHERE slug = %s",
+                $slug
+            )
+        );
+    }
+
+    /**
+     * Add new event type
+     *
+     * @param array $event_type_data
+     * @return int|WP_Error
+     */
+    public function add_event_type($event_type_data) {
+        global $wpdb;
+
+        // Validate required fields
+        if (empty($event_type_data['slug']) || empty($event_type_data['name'])) {
+            return new WP_Error('missing_fields', 'Slug and Name are required');
+        }
+
+        // Check if slug already exists
+        $existing = $this->get_event_type_by_slug($event_type_data['slug']);
+        if ($existing) {
+            return new WP_Error('slug_exists', 'Event type slug already exists');
+        }
+
+        $data = array(
+            'slug' => sanitize_key($event_type_data['slug']),
+            'name' => sanitize_text_field($event_type_data['name']),
+            'description' => isset($event_type_data['description']) ? sanitize_textarea_field($event_type_data['description']) : '',
+            'sort_order' => isset($event_type_data['sort_order']) ? intval($event_type_data['sort_order']) : 0,
+            'is_active' => isset($event_type_data['is_active']) ? intval($event_type_data['is_active']) : 1
+        );
+
+        $result = $wpdb->insert($this->event_types_table, $data);
+
+        if ($result === false) {
+            return new WP_Error('db_error', 'Failed to create event type');
+        }
+
+        return $wpdb->insert_id;
+    }
+
+    /**
+     * Update event type
+     *
+     * @param int $id
+     * @param array $event_type_data
+     * @return bool|WP_Error
+     */
+    public function update_event_type($id, $event_type_data) {
+        global $wpdb;
+
+        // Validate required fields
+        if (empty($event_type_data['slug']) || empty($event_type_data['name'])) {
+            return new WP_Error('missing_fields', 'Slug and Name are required');
+        }
+
+        // Check if slug exists for another event type
+        $existing = $this->get_event_type_by_slug($event_type_data['slug']);
+        if ($existing && $existing->id != $id) {
+            return new WP_Error('slug_exists', 'Event type slug already exists');
+        }
+
+        $data = array(
+            'slug' => sanitize_key($event_type_data['slug']),
+            'name' => sanitize_text_field($event_type_data['name']),
+            'description' => isset($event_type_data['description']) ? sanitize_textarea_field($event_type_data['description']) : '',
+            'sort_order' => isset($event_type_data['sort_order']) ? intval($event_type_data['sort_order']) : 0,
+            'is_active' => isset($event_type_data['is_active']) ? intval($event_type_data['is_active']) : 1
+        );
+
+        $result = $wpdb->update(
+            $this->event_types_table,
+            $data,
+            array('id' => $id)
+        );
+
+        if ($result === false) {
+            return new WP_Error('db_error', 'Failed to update event type');
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete event type (soft delete by setting is_active to false)
+     *
+     * @param int $id
+     * @return bool|WP_Error
+     */
+    public function delete_event_type($id) {
+        global $wpdb;
+
+        // Check if event type exists
+        $event_type = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$this->event_types_table} WHERE id = %d", $id)
+        );
+
+        if (!$event_type) {
+            return new WP_Error('not_found', 'Event type not found');
+        }
+
+        // Soft delete by deactivating
+        $result = $wpdb->update(
+            $this->event_types_table,
+            array('is_active' => 0),
+            array('id' => $id)
+        );
+
+        if ($result === false) {
+            return new WP_Error('db_error', 'Failed to delete event type');
+        }
+
+        return true;
+    }
+
+    /**
+     * Get all event types (including inactive)
+     *
+     * @return array
+     */
+    public function get_all_event_types() {
+        global $wpdb;
+
+        $results = $wpdb->get_results(
+            "SELECT * FROM {$this->event_types_table} ORDER BY sort_order ASC, name ASC"
+        );
+
+        return $results ?: array();
     }
 }

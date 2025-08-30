@@ -243,12 +243,22 @@ class My_Gift_Registry_Email_Handler {
      */
     private function get_event_type_label($event_type) {
         $labels = array(
+            // New format (slugs)
             'wedding' => __('Wedding', 'my-gift-registry'),
-            'birthday' => __('Birthday', 'my-gift-registry'),
             'anniversary' => __('Anniversary', 'my-gift-registry'),
+            'birthday' => __('Birthday', 'my-gift-registry'),
+            'baby-shower' => __('Baby Shower', 'my-gift-registry'),
+            'kitchen-party' => __('Kitchen Party', 'my-gift-registry'),
             'graduation' => __('Graduation', 'my-gift-registry'),
             'housewarming' => __('Housewarming', 'my-gift-registry'),
             'retirement' => __('Retirement', 'my-gift-registry'),
+
+            // Legacy format (old capitalized names for backward compatibility)
+            'Wedding' => __('Wedding', 'my-gift-registry'),
+            'Anniversary' => __('Anniversary', 'my-gift-registry'),
+            'Birthday' => __('Birthday', 'my-gift-registry'),
+            'Kitchen Party' => __('Kitchen Party', 'my-gift-registry'),
+            'Baby Shower' => __('Baby Shower', 'my-gift-registry'),
         );
 
         return isset($labels[$event_type]) ? $labels[$event_type] : ucfirst($event_type);

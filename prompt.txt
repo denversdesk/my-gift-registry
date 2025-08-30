@@ -1,6 +1,7 @@
 - Next tasks
 
 1. Admin addition of featured products that will be chosen and sent together with the email as "Recommended Products"
+In `private function get_reservation_email_content($email, $gift)` where the body of the email is composed, I would like the body to contain
 
 2. Display of event date and the Countdown
 

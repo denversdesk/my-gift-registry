@@ -67,6 +67,10 @@ class My_Gift_Registry_Create_Wishlist_Handler {
     private function render_wishlist_form() {
         $current_user = wp_get_current_user();
 
+        // Get available event types from database
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $active_event_types = $db_handler->get_active_event_types();
+
         ob_start();
         ?>
         <div class="my-gift-registry-create-form">
@@ -85,11 +89,15 @@ class My_Gift_Registry_Create_Wishlist_Handler {
                         <label for="event_type"><?php _e('Event Type', 'my-gift-registry'); ?> *</label>
                         <select id="event_type" name="event_type" required>
                             <option value=""><?php _e('Select Event Type', 'my-gift-registry'); ?></option>
-                            <option value="Wedding"><?php _e('Wedding', 'my-gift-registry'); ?></option>
-                            <option value="Anniversary"><?php _e('Anniversary', 'my-gift-registry'); ?></option>
-                            <option value="Birthday"><?php _e('Birthday', 'my-gift-registry'); ?></option>
-                            <option value="Kitchen Party"><?php _e('Kitchen Party', 'my-gift-registry'); ?></option>
-                            <option value="Baby Shower"><?php _e('Baby Shower', 'my-gift-registry'); ?></option>
+                            <?php foreach ($active_event_types as $event_type): ?>
+                                <option value="<?php echo esc_attr($event_type->slug); ?>"><?php echo esc_html($event_type->name); ?></option>
+                            <?php endforeach; ?>
+
+                            <?php if (empty($active_event_types)): ?>
+                                <!-- Fallback options if no event types are available -->
+                                <option value="wedding"><?php _e('Wedding', 'my-gift-registry'); ?></option>
+                                <option value="birthday"><?php _e('Birthday', 'my-gift-registry'); ?></option>
+                            <?php endif; ?>
                         </select>
                     </div>
 

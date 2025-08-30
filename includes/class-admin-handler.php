@@ -23,6 +23,12 @@ class My_Gift_Registry_Admin_Handler {
         add_action('wp_ajax_mgr_search_products', array($this, 'ajax_search_products'));
         add_action('wp_ajax_mgr_save_recommended', array($this, 'ajax_save_recommended'));
         add_action('wp_ajax_mgr_get_recommended', array($this, 'ajax_get_recommended'));
+
+        // Event types AJAX handlers
+        add_action('wp_ajax_mgr_add_event_type', array($this, 'ajax_add_event_type'));
+        add_action('wp_ajax_mgr_update_event_type', array($this, 'ajax_update_event_type'));
+        add_action('wp_ajax_mgr_delete_event_type', array($this, 'ajax_delete_event_type'));
+        add_action('wp_ajax_mgr_get_event_types', array($this, 'ajax_get_event_types'));
     }
 
     /**
@@ -37,6 +43,16 @@ class My_Gift_Registry_Admin_Handler {
             array($this, 'admin_page'),
             'dashicons-gifts',
             26
+        );
+
+        // Event Types Management submenu
+        add_submenu_page(
+            'my-gift-registry',
+            __('Event Types', 'my-gift-registry'),
+            __('Event Types', 'my-gift-registry'),
+            'manage_options',
+            'my-gift-registry-event-types',
+            array($this, 'event_types_page')
         );
 
         add_submenu_page(
@@ -54,7 +70,7 @@ class My_Gift_Registry_Admin_Handler {
      */
     public function enqueue_admin_scripts($hook) {
         // Only load on our plugin pages
-        if (!in_array($hook, array('toplevel_page_my-gift-registry', 'gift-registry_page_my-gift-registry-recommended'))) {
+        if (!in_array($hook, array('toplevel_page_my-gift-registry', 'gift-registry_page_my-gift-registry-event-types', 'gift-registry_page_my-gift-registry-recommended'))) {
             return;
         }
 
@@ -102,6 +118,9 @@ class My_Gift_Registry_Admin_Handler {
                     <a href="?page=my-gift-registry" class="nav-tab nav-tab-active">
                         <?php _e('Dashboard', 'my-gift-registry'); ?>
                     </a>
+                    <a href="?page=my-gift-registry-event-types" class="nav-tab">
+                        <?php _e('Event Types', 'my-gift-registry'); ?>
+                    </a>
                     <a href="?page=my-gift-registry-recommended" class="nav-tab">
                         <?php _e('Recommended Products', 'my-gift-registry'); ?>
                     </a>
@@ -129,15 +148,20 @@ class My_Gift_Registry_Admin_Handler {
         $db_handler = new My_Gift_Registry_DB_Handler();
         $recommended_data = $db_handler->get_all_recommended_products();
 
-        // Available event types
-        $event_types = array(
-            'wedding' => __('Wedding', 'my-gift-registry'),
-            'birthday' => __('Birthday', 'my-gift-registry'),
-            'anniversary' => __('Anniversary', 'my-gift-registry'),
-            'graduation' => __('Graduation', 'my-gift-registry'),
-            'housewarming' => __('Housewarming', 'my-gift-registry'),
-            'retirement' => __('Retirement', 'my-gift-registry'),
-        );
+        // Get available event types from database
+        $active_event_types = $db_handler->get_active_event_types();
+        $event_types = array();
+        foreach ($active_event_types as $event_type) {
+            $event_types[$event_type->slug] = $event_type->name;
+        }
+
+        // Ensure some default fallback if no event types exist
+        if (empty($event_types)) {
+            $event_types = array(
+                'wedding' => __('Wedding', 'my-gift-registry'),
+                'birthday' => __('Birthday', 'my-gift-registry'),
+            );
+        }
 
         ?>
         <div class="wrap">
@@ -405,5 +429,272 @@ class My_Gift_Registry_Admin_Handler {
         wp_send_json_success(array(
             'products' => $products
         ));
+    }
+
+    /**
+     * Event Types Management Admin Page
+     */
+    public function event_types_page() {
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $event_types = $db_handler->get_all_event_types();
+
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Event Types Management', 'my-gift-registry'); ?></h1>
+
+            <div class="mgr-event-types-container">
+                <!-- Add New Event Type Form -->
+                <div class="mgr-add-event-type">
+                    <h2><?php _e('Add New Event Type', 'my-gift-registry'); ?></h2>
+
+                    <form id="mgr-add-event-type-form">
+                        <?php wp_nonce_field('mgr_event_type_nonce', 'mgr_event_type_nonce'); ?>
+
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label for="event_type_slug"><?php _e('Slug', 'my-gift-registry'); ?> *</label></th>
+                                <td>
+                                    <input type="text" id="event_type_slug" name="slug" class="regular-text" required>
+                                    <p class="description"><?php _e('Unique identifier (lowercase, no spaces)', 'my-gift-registry'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="event_type_name"><?php _e('Name', 'my-gift-registry'); ?> *</label></th>
+                                <td>
+                                    <input type="text" id="event_type_name" name="name" class="regular-text" required>
+                                    <p class="description"><?php _e('Display name', 'my-gift-registry'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="event_type_description"><?php _e('Description', 'my-gift-registry'); ?></label></th>
+                                <td>
+                                    <textarea id="event_type_description" name="description" rows="3" class="large-text"></textarea>
+                                    <p class="description"><?php _e('Optional description (for internal use)', 'my-gift-registry'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="event_type_sort_order"><?php _e('Sort Order', 'my-gift-registry'); ?></label></th>
+                                <td>
+                                    <input type="number" id="event_type_sort_order" name="sort_order" value="0" min="0">
+                                    <p class="description"><?php _e('Order in which event types are displayed (lower numbers first)', 'my-gift-registry'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p class="submit">
+                            <button type="submit" class="button button-primary"><?php _e('Add Event Type', 'my-gift-registry'); ?></button>
+                            <span id="mgr-add-event-type-status"></span>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Existing Event Types List -->
+                <div class="mgr-event-types-list">
+                    <h2><?php _e('Existing Event Types', 'my-gift-registry'); ?></h2>
+
+                    <div id="mgr-event-types-table-container">
+                        <table class="wp-list-table widefat fixed striped" id="mgr-event-types-table">
+                            <thead>
+                                <tr>
+                                    <th><?php _e('Name', 'my-gift-registry'); ?></th>
+                                    <th><?php _e('Slug', 'my-gift-registry'); ?></th>
+                                    <th><?php _e('Description', 'my-gift-registry'); ?></th>
+                                    <th><?php _e('Sort Order', 'my-gift-registry'); ?></th>
+                                    <th><?php _e('Status', 'my-gift-registry'); ?></th>
+                                    <th><?php _e('Actions', 'my-gift-registry'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody id="mgr-event-types-tbody">
+                                <?php foreach ($event_types as $event_type): ?>
+                                    <tr data-id="<?php echo esc_attr($event_type->id); ?>">
+                                        <td class="column-name">
+                                            <strong><?php echo esc_html($event_type->name); ?></strong>
+                                        </td>
+                                        <td class="column-slug"><?php echo esc_html($event_type->slug); ?></td>
+                                        <td class="column-description"><?php echo esc_html($event_type->description); ?></td>
+                                        <td class="column-sort-order"><?php echo esc_html($event_type->sort_order); ?></td>
+                                        <td class="column-status">
+                                            <span class="event-type-status status-<?php echo $event_type->is_active ? 'active' : 'inactive'; ?>">
+                                                <?php echo $event_type->is_active ? __('Active', 'my-gift-registry') : __('Inactive', 'my-gift-registry'); ?>
+                                            </span>
+                                        </td>
+                                        <td class="column-actions">
+                                            <button type="button" class="button button-small mgr-edit-event-type" data-id="<?php echo esc_attr($event_type->id); ?>"><?php _e('Edit', 'my-gift-registry'); ?></button>
+                                            <?php if ($event_type->is_active): ?>
+                                                <button type="button" class="button button-small mg-rdelete-event-type" data-id="<?php echo esc_attr($event_type->id); ?>"><?php _e('Deactivate', 'my-gift-registry'); ?></button>
+                                            <?php else: ?>
+                                                <button type="button" class="button button-small button-primary mgr-activate-event-type" data-id="<?php echo esc_attr($event_type->id); ?>"><?php _e('Activate', 'my-gift-registry'); ?></button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Event Type Modal -->
+        <div id="mgr-edit-event-type-modal" class="mgr-modal" style="display: none;">
+            <div class="mgr-modal-overlay"></div>
+            <div class="mgr-modal-content">
+                <div class="mgr-modal-header">
+                    <h3><?php _e('Edit Event Type', 'my-gift-registry'); ?></h3>
+                    <button type="button" class="mgr-modal-close">&times;</button>
+                </div>
+
+                <form id="mgr-edit-event-type-form">
+                    <input type="hidden" id="edit_event_type_id" name="id">
+
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="edit_event_type_slug"><?php _e('Slug', 'my-gift-registry'); ?> *</label></th>
+                            <td>
+                                <input type="text" id="edit_event_type_slug" name="slug" class="regular-text" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="edit_event_type_name"><?php _e('Name', 'my-gift-registry'); ?> *</label></th>
+                            <td>
+                                <input type="text" id="edit_event_type_name" name="name" class="regular-text" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="edit_event_type_description"><?php _e('Description', 'my-gift-registry'); ?></label></th>
+                            <td>
+                                <textarea id="edit_event_type_description" name="description" rows="3" class="large-text"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="edit_event_type_sort_order"><?php _e('Sort Order', 'my-gift-registry'); ?></label></th>
+                            <td>
+                                <input type="number" id="edit_event_type_sort_order" name="sort_order" value="0" min="0">
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p class="submit">
+                        <button type="submit" class="button button-primary"><?php _e('Update Event Type', 'my-gift-registry'); ?></button>
+                        <button type="button" class="button mgr-modal-close"><?php _e('Cancel', 'my-gift-registry'); ?></button>
+                        <span id="mgr-edit-event-type-status"></span>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            // JavaScript for event types management will be added here
+        </script>
+        <?php
+    }
+
+    /**
+     * AJAX handler for adding event type
+     */
+    public function ajax_add_event_type() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['mgr_event_type_nonce'], 'mgr_event_type_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions.', 'my-gift-registry'));
+            return;
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $result = $db_handler->add_event_type($_POST);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        } else {
+            wp_send_json_success(array(
+                'message' => __('Event type added successfully!', 'my-gift-registry'),
+                'id' => $result
+            ));
+        }
+    }
+
+    /**
+     * AJAX handler for updating event type
+     */
+    public function ajax_update_event_type() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['mgr_event_type_nonce'], 'mgr_event_type_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions.', 'my-gift-registry'));
+            return;
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $id = intval($_POST['id']);
+        $result = $db_handler->update_event_type($id, $_POST);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        } else {
+            wp_send_json_success(array(
+                'message' => __('Event type updated successfully!', 'my-gift-registry')
+            ));
+        }
+    }
+
+    /**
+     * AJAX handler for deleting event type
+     */
+    public function ajax_delete_event_type() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['mgr_event_type_nonce'], 'mgr_event_type_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions.', 'my-gift-registry'));
+            return;
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $id = intval($_POST['id']);
+        $result = $db_handler->delete_event_type($id);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        } else {
+            wp_send_json_success(array(
+                'message' => __('Event type deactivated successfully!', 'my-gift-registry')
+            ));
+        }
+    }
+
+    /**
+     * AJAX handler for getting event types
+     */
+    public function ajax_get_event_types() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['mgr_event_type_nonce'], 'mgr_event_type_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions.', 'my-gift-registry'));
+            return;
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $event_types = $db_handler->get_active_event_types();
+
+        wp_send_json_success(array('event_types' => $event_types));
     }
 }
