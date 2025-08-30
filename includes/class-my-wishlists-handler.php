@@ -218,6 +218,9 @@ class My_Gift_Registry_My_Wishlists_Handler {
             return '<div class="error-message">' . __('Wishlist not found or access denied.', 'my-gift-registry') . '</div>';
         }
 
+        // Get active event types from database
+        $active_event_types = $db_handler->get_active_event_types();
+
         // Clear any output buffers and remove filters that might interfere
         if (ob_get_level()) {
             ob_clean();
@@ -246,11 +249,15 @@ class My_Gift_Registry_My_Wishlists_Handler {
                         <label for="event_type"><?php _e('Event Type', 'my-gift-registry'); ?> *</label>
                         <select id="event_type" name="event_type" required>
                             <option value=""><?php _e('Select Event Type', 'my-gift-registry'); ?></option>
-                            <option value="Wedding" <?php selected($wishlist->event_type, 'Wedding'); ?>><?php _e('Wedding', 'my-gift-registry'); ?></option>
-                            <option value="Anniversary" <?php selected($wishlist->event_type, 'Anniversary'); ?>><?php _e('Anniversary', 'my-gift-registry'); ?></option>
-                            <option value="Birthday" <?php selected($wishlist->event_type, 'Birthday'); ?>><?php _e('Birthday', 'my-gift-registry'); ?></option>
-                            <option value="Kitchen Party" <?php selected($wishlist->event_type, 'Kitchen Party'); ?>><?php _e('Kitchen Party', 'my-gift-registry'); ?></option>
-                            <option value="Baby Shower" <?php selected($wishlist->event_type, 'Baby Shower'); ?>><?php _e('Baby Shower', 'my-gift-registry'); ?></option>
+                            <?php foreach ($active_event_types as $event_type): ?>
+                                <option value="<?php echo esc_attr($event_type->slug); ?>" <?php selected($wishlist->event_type, $event_type->slug); ?>><?php echo esc_html($event_type->name); ?></option>
+                            <?php endforeach; ?>
+
+                            <?php if (empty($active_event_types)): ?>
+                                <!-- Fallback options if no event types are available -->
+                                <option value="wedding" <?php selected($wishlist->event_type, 'wedding'); ?>><?php _e('Wedding', 'my-gift-registry'); ?></option>
+                                <option value="birthday" <?php selected($wishlist->event_type, 'birthday'); ?>><?php _e('Birthday', 'my-gift-registry'); ?></option>
+                            <?php endif; ?>
                         </select>
                     </div>
 
