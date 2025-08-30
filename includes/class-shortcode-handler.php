@@ -11,12 +11,22 @@ if (!defined('ABSPATH')) {
 }
 
 class My_Gift_Registry_Shortcode_Handler {
+    /**
+     * Current wishlist data for OG tags
+     */
+    private $current_wishlist_for_og = null;
 
     /**
      * Constructor
      */
     public function __construct() {
         add_shortcode('gift_registry_wishlist', array($this, 'render_wishlist'));
+
+        // Add Open Graph tags to wp_head for wishlist pages
+        add_action('wp_head', array($this, 'add_open_graph_tags'), 1);
+
+        // Check for wishlist URLs early
+        add_action('wp', array($this, 'detect_wishlist_url_early'), 1);
     }
 
     /**
@@ -58,6 +68,11 @@ class My_Gift_Registry_Shortcode_Handler {
                 $db_handler = new My_Gift_Registry_DB_Handler();
                 $wishlist = $db_handler->get_wishlist_by_slug($get_slug);
             }
+        }
+
+        // Store wishlist for Open Graph tags if we have one and it hasn't been set yet
+        if ($wishlist && !$this->current_wishlist_for_og) {
+            $this->current_wishlist_for_og = $wishlist;
         }
 
         // If still no wishlist, show a demo page or error message
@@ -473,5 +488,91 @@ class My_Gift_Registry_Shortcode_Handler {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Detect wishlist URLs early in the WordPress loading process
+     */
+    public function detect_wishlist_url_early() {
+        // Check for our wishlist slug query var early
+        $wishlist_slug = get_query_var('my_gift_registry_wishlist');
+
+        if (!empty($wishlist_slug)) {
+            // Get the wishlist data early
+            $db_handler = new My_Gift_Registry_DB_Handler();
+            $wishlist = $db_handler->get_wishlist_by_slug($wishlist_slug);
+
+            if ($wishlist) {
+                // Store for use in OG tags
+                $this->current_wishlist_for_og = $wishlist;
+
+                // Also store in global for shortcode handler
+                global $my_gift_registry_current_wishlist;
+                $my_gift_registry_current_wishlist = $wishlist;
+            }
+        }
+    }
+
+    /**
+     * Add Open Graph meta tags to the head for wishlist pages
+     */
+    public function add_open_graph_tags() {
+        // Only add OG tags if we have a current wishlist
+        if (!$this->current_wishlist_for_og) {
+            return;
+        }
+
+        $wishlist = $this->current_wishlist_for_og;
+
+        // Build the wishlist URL
+        $wishlist_url = home_url('/wishlist/' . $wishlist->slug);
+
+        // Prepare the values with fallbacks
+        $og_title = !empty($wishlist->title) ? wp_strip_all_tags(stripslashes($wishlist->title)) : __('Gift Registry', 'my-gift-registry');
+
+        // Create a description from available data
+        $og_description_parts = array();
+        if (!empty($wishlist->description)) {
+            $og_description_parts[] = wp_strip_all_tags(stripslashes($wishlist->description));
+        }
+        if (!empty($wishlist->full_name)) {
+            $og_description_parts[] = __('Created by', 'my-gift-registry') . ' ' . wp_strip_all_tags($wishlist->full_name);
+        }
+        $og_description = !empty($og_description_parts) ? implode(' | ', $og_description_parts) :
+                         sprintf(__('Help make %s special with gifts. View their wishlist!', 'my-gift-registry'), $og_title);
+
+        // Set up the image (profile picture or fallback)
+        $og_image = '';
+        if (!empty($wishlist->profile_pic)) {
+            $og_image = wp_get_attachment_url($wishlist->profile_pic) ?: $wishlist->profile_pic;
+        }
+
+        // Fallback to a default gift image if no profile picture
+        if (empty($og_image)) {
+            // Use a placeholder image or default gift-related image
+            $og_image = 'https://via.placeholder.com/1200x630?text=' . urlencode($og_title);
+        }
+
+        // Output the Open Graph meta tags
+        ?>
+        <!-- My Gift Registry Open Graph Tags -->
+        <meta property="og:title" content="<?php echo esc_attr($og_title); ?>" />
+        <meta property="og:description" content="<?php echo esc_attr($og_description); ?>" />
+        <meta property="og:image" content="<?php echo esc_url($og_image); ?>" />
+        <meta property="og:url" content="<?php echo esc_url($wishlist_url); ?>" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="<?php echo esc_attr(get_bloginfo('name')); ?>" />
+
+        <!-- Twitter Card Tags (for additional compatibility) -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="<?php echo esc_attr($og_title); ?>" />
+        <meta name="twitter:description" content="<?php echo esc_attr($og_description); ?>" />
+        <meta name="twitter:image" content="<?php echo esc_url($og_image); ?>" />
+
+        <!-- Additional meta tags for better sharing -->
+        <meta name="description" content="<?php echo esc_attr($og_description); ?>" />
+        <meta name="keywords" content="gift registry, wishlist, <?php echo esc_attr($og_title); ?>" />
+
+        <?php
     }
 }
