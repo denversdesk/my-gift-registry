@@ -75,6 +75,18 @@ class My_Gift_Registry_DB_Handler {
             KEY wishlist_id (wishlist_id)
         ) $charset_collate;";
 
+        // Recommended products table
+        $recommended_products_table = $wpdb->prefix . 'my_gift_registry_recommended_products';
+        $recommended_sql = "CREATE TABLE {$recommended_products_table} (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            event_type varchar(50) NOT NULL,
+            product_ids text NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY event_type (event_type)
+        ) $charset_collate;";
+
         // Reservations table
         $reservations_sql = "CREATE TABLE {$this->reservations_table} (
             id int(11) NOT NULL AUTO_INCREMENT,
@@ -95,15 +107,19 @@ class My_Gift_Registry_DB_Handler {
         $result2 = dbDelta($gifts_sql);
         error_log('My Gift Registry: Gifts table creation result: ' . print_r($result2, true));
 
-        $result3 = dbDelta($reservations_sql);
-        error_log('My Gift Registry: Reservations table creation result: ' . print_r($result3, true));
+        $result3 = dbDelta($recommended_sql);
+        error_log('My Gift Registry: Recommended products table creation result: ' . print_r($result3, true));
+
+        $result4 = dbDelta($reservations_sql);
+        error_log('My Gift Registry: Reservations table creation result: ' . print_r($result4, true));
 
         // Check if tables exist after creation
         $wishlist_exists = $this->table_exists($this->wishlist_table);
         $gifts_exists = $this->table_exists($gifts_table);
+        $recommended_exists = $this->table_exists($recommended_products_table);
         $reservations_exists = $this->table_exists($this->reservations_table);
 
-        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No'));
+        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Recommended: ' . ($recommended_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No'));
 
         // Insert sample data for testing only if wishlist table exists
         if ($wishlist_exists) {
@@ -763,5 +779,158 @@ class My_Gift_Registry_DB_Handler {
                 $wishlist_id
             )
         );
+    }
+
+    /**
+     * Save recommended products for an event type
+     *
+     * @param string $event_type
+     * @param array $product_ids
+     * @return bool|WP_Error
+     */
+    public function save_recommended_products($event_type, $product_ids) {
+        global $wpdb;
+
+        if (empty($event_type)) {
+            return new WP_Error('missing_event_type', __('Event type is required.', 'my-gift-registry'));
+        }
+
+        if (count($product_ids) > 6) {
+            return new WP_Error('too_many_products', __('Maximum 6 products allowed per event type.', 'my-gift-registry'));
+        }
+
+        // Validate product IDs exist (optional - could be performance intensive)
+        if (class_exists('WooCommerce')) {
+            foreach ($product_ids as $product_id) {
+                $product = wc_get_product($product_id);
+                if (!$product) {
+                    return new WP_Error('invalid_product', __('Product ID ' . $product_id . ' does not exist.', 'my-gift-registry'));
+                }
+            }
+        }
+
+        $recommended_table = $wpdb->prefix . 'my_gift_registry_recommended_products';
+
+        // Prepare data
+        $data = array(
+            'event_type' => sanitize_text_field($event_type),
+            'product_ids' => wp_json_encode($product_ids),
+            'updated_at' => current_time('mysql')
+        );
+
+        // Check if entry exists
+        $existing = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$recommended_table} WHERE event_type = %s",
+                $event_type
+            )
+        );
+
+        if ($existing) {
+            // Update existing record
+            $result = $wpdb->update(
+                $recommended_table,
+                $data,
+                array('event_type' => $event_type),
+                array('%s', '%s', '%s'),
+                array('%s')
+            );
+        } else {
+            // Insert new record
+            $result = $wpdb->insert(
+                $recommended_table,
+                $data,
+                array('%s', '%s', '%s')
+            );
+        }
+
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to save recommended products.', 'my-gift-registry'));
+        }
+
+        return true;
+    }
+
+    /**
+     * Get recommended products for an event type
+     *
+     * @param string $event_type
+     * @return array
+     */
+    public function get_recommended_products($event_type) {
+        global $wpdb;
+
+        if (empty($event_type)) {
+            return array();
+        }
+
+        $recommended_table = $wpdb->prefix . 'my_gift_registry_recommended_products';
+
+        $result = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT product_ids FROM {$recommended_table} WHERE event_type = %s",
+                $event_type
+            )
+        );
+
+        if (!$result) {
+            return array();
+        }
+
+        $product_ids = json_decode($result, true);
+        return is_array($product_ids) ? $product_ids : array();
+    }
+
+    /**
+     * Get all recommended products data for admin interface
+     *
+     * @return array
+     */
+    public function get_all_recommended_products() {
+        global $wpdb;
+
+        $recommended_table = $wpdb->prefix . 'my_gift_registry_recommended_products';
+
+        $results = $wpdb->get_results("SELECT * FROM {$recommended_table} ORDER BY event_type ASC");
+
+        $data = array();
+        foreach ($results as $row) {
+            $product_ids = json_decode($row->product_ids, true);
+            $data[$row->event_type] = array(
+                'product_ids' => is_array($product_ids) ? $product_ids : array(),
+                'updated_at' => $row->updated_at
+            );
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get detailed product data for recommended products
+     *
+     * @param array $product_ids
+     * @return array
+     */
+    public function get_recommended_products_details($product_ids) {
+        if (!is_array($product_ids) || empty($product_ids) || !class_exists('WooCommerce')) {
+            return array();
+        }
+
+        $products = array();
+        foreach ($product_ids as $product_id) {
+            $product = wc_get_product($product_id);
+            if ($product) {
+                $products[] = array(
+                    'id' => $product_id,
+                    'title' => $product->get_name(),
+                    'price' => $product->get_price(),
+                    'price_html' => $product->get_price_html(),
+                    'image_url' => get_the_post_thumbnail_url($product_id, 'thumbnail'),
+                    'permalink' => get_permalink($product_id)
+                );
+            }
+        }
+
+        return $products;
     }
 }

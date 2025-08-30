@@ -74,6 +74,7 @@ class My_Gift_Registry {
         require_once MY_GIFT_REGISTRY_PLUGIN_DIR . 'includes/class-my-wishlists-handler.php';
         require_once MY_GIFT_REGISTRY_PLUGIN_DIR . 'includes/class-ajax-handler.php';
         require_once MY_GIFT_REGISTRY_PLUGIN_DIR . 'includes/class-email-handler.php';
+        require_once MY_GIFT_REGISTRY_PLUGIN_DIR . 'includes/class-admin-handler.php';
     }
 
     /**
@@ -198,6 +199,7 @@ class My_Gift_Registry {
         new My_Gift_Registry_Create_Wishlist_Handler();
         new My_Gift_Registry_My_Wishlists_Handler();
         new My_Gift_Registry_Ajax_Handler();
+        new My_Gift_Registry_Admin_Handler(); // ✨ NEW: Admin handler
     }
 
     /**

@@ -13,6 +13,11 @@ if (!defined('ABSPATH')) {
 class My_Gift_Registry_Email_Handler {
 
     /**
+     * Current wishlist for email context
+     */
+    private $currentWishlist = null;
+
+    /**
      * Send reservation confirmation email
      *
      * @param string $email
@@ -24,6 +29,13 @@ class My_Gift_Registry_Email_Handler {
 
         // Prepare email content
         $message = $this->get_reservation_email_content($email, $gift);
+
+        // Get wishlist details for recommended products
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $wishlist = $db_handler->get_wishlist_by_slug($gift->wishlist_slug);
+
+        // Store wishlist info for use in email content generation
+        $this->currentWishlist = $wishlist;
 
         // Set email headers
         $headers = array(
@@ -62,10 +74,20 @@ class My_Gift_Registry_Email_Handler {
                 .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                 .header { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 5px; margin-bottom: 20px; }
                 .gift-details { background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
-                .featured-products { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+                .recommendations { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; border: 2px solid #28a745; }
+                .recommendations .section-header { text-align: center; margin-bottom: 20px; color: #28a745; }
+                .recommendations h3 { color: #28a745; font-size: 20px; margin: 0 0 10px 0; }
+                .recommendations .section-header p { margin: 0; font-style: italic; color: #666; }
+                .featured-products { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; border: 2px solid #ffc107; }
+                .featured-products .section-header { text-align: center; margin-bottom: 20px; color: #ffc107; }
                 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-                .product-item { background: white; padding: 15px; border-radius: 5px; border: 1px solid #ddd; }
-                .product-item h4 { margin-top: 0; }
+                .product-item { background: white; padding: 15px; border-radius: 5px; border: 1px solid #ddd; text-align: center; }
+                .product-item img { max-width: 100%; height: 150px; object-fit: cover; border-radius: 3px; margin-bottom: 10px; }
+                .product-item h4 { margin-top: 0; font-size: 16px; color: #333; }
+                .product-item .product-price { color: #28a745; font-weight: bold; margin: 5px 0; }
+                .product-item a { color: #007cba; text-decoration: none; font-weight: 500; }
+                .product-item .view-product-button { display: inline-block; background: #007cba; color: white; padding: 8px 15px; border-radius: 3px; text-decoration: none; font-size: 14px; margin-top: 10px; }
+                .product-item .view-product-button:hover { background: #005a87; }
                 .search-link { display: inline-block; background-color: #007cba; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
                 .footer { text-align: center; font-size: 12px; color: #666; margin-top: 30px; }
             </style>
@@ -99,7 +121,7 @@ class My_Gift_Registry_Email_Handler {
                     <p><strong><?php _e('Reservation Date:', 'my-gift-registry'); ?></strong> <?php echo current_time(get_option('date_format') . ' ' . get_option('time_format')); ?></p>
                 </div>
 
-                <?php echo $this->get_featured_products_section($gift); ?>
+                <?php echo $this->get_recommended_products_section($this->currentWishlist); ?>
 
                 <div class="search-link-section">
                     <?php
@@ -123,12 +145,64 @@ class My_Gift_Registry_Email_Handler {
     }
 
     /**
-     * Get featured products section for email
+     * Get recommended products section for email
      *
-     * @param object $gift
+     * @param object $wishlist
      * @return string
      */
-    private function get_featured_products_section($gift) {
+    private function get_recommended_products_section($wishlist) {
+        if (!$wishlist || empty($wishlist->event_type)) {
+            // Fallback to featured products if no event type
+            return $this->get_featured_products_section_legacy();
+        }
+
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $recommended_product_ids = $db_handler->get_recommended_products($wishlist->event_type);
+
+        if (empty($recommended_product_ids)) {
+            // Fallback to featured products if no recommendations set
+            return $this->get_featured_products_section_legacy();
+        }
+
+        $recommended_products = $db_handler->get_recommended_products_details($recommended_product_ids);
+
+        if (empty($recommended_products)) {
+            // Fallback to featured products if recommended products not found
+            return $this->get_featured_products_section_legacy();
+        }
+
+        ob_start();
+        ?>
+        <div class="recommendations">
+            <div class="section-header">
+                <h3><?php _e('🎁 Our Recommended Gift Ideas', 'my-gift-registry'); ?></h3>
+                <p><?php printf(__('Based on your interest in this %s gift registry, here are some personalized recommendations:', 'my-gift-registry'), esc_html($this->get_event_type_label($wishlist->event_type))); ?></p>
+            </div>
+            <div class="product-grid">
+                <?php foreach ($recommended_products as $product) : ?>
+                    <div class="product-item">
+                        <?php if (!empty($product['image_url'])) : ?>
+                            <img src="<?php echo esc_url($product['image_url']); ?>" alt="<?php echo esc_attr($product['title']); ?>" style="max-width: 100%; height: auto;">
+                        <?php endif; ?>
+                        <h4><?php echo esc_html($product['title']); ?></h4>
+                        <div class="product-price"><?php echo $product['price_html']; ?></div>
+                        <a href="<?php echo esc_url($product['permalink']); ?>" target="_blank" class="view-product-button">
+                            <?php _e('View Product', 'my-gift-registry'); ?> →
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Get featured products section (legacy fallback)
+     *
+     * @return string
+     */
+    private function get_featured_products_section_legacy() {
         $db_handler = new My_Gift_Registry_DB_Handler();
         $featured_products = $db_handler->get_featured_woocommerce_products(4);
 
@@ -139,12 +213,14 @@ class My_Gift_Registry_Email_Handler {
         ob_start();
         ?>
         <div class="featured-products">
-            <h3><?php _e('✨ You might also like these featured products', 'my-gift-registry'); ?></h3>
+            <div class="section-header">
+                <h3><?php _e('✨ You might also like these featured products', 'my-gift-registry'); ?></h3>
+            </div>
             <div class="product-grid">
                 <?php foreach ($featured_products as $product) : ?>
                     <div class="product-item">
-                        <?php if (!empty($product['image'])) : ?>
-                            <img src="<?php echo esc_url($product['image']); ?>" alt="<?php echo esc_attr($product['title']); ?>" style="max-width: 100%; height: auto;">
+                        <?php if (!empty($product['image_url'])) : ?>
+                            <img src="<?php echo esc_url($product['image_url']); ?>" alt="<?php echo esc_attr($product['title']); ?>" style="max-width: 100%; height: auto;">
                         <?php endif; ?>
                         <h4><?php echo esc_html($product['title']); ?></h4>
                         <p><?php echo $product['price']; ?></p>
@@ -157,5 +233,34 @@ class My_Gift_Registry_Email_Handler {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Get event type label
+     *
+     * @param string $event_type
+     * @return string
+     */
+    private function get_event_type_label($event_type) {
+        $labels = array(
+            'wedding' => __('Wedding', 'my-gift-registry'),
+            'birthday' => __('Birthday', 'my-gift-registry'),
+            'anniversary' => __('Anniversary', 'my-gift-registry'),
+            'graduation' => __('Graduation', 'my-gift-registry'),
+            'housewarming' => __('Housewarming', 'my-gift-registry'),
+            'retirement' => __('Retirement', 'my-gift-registry'),
+        );
+
+        return isset($labels[$event_type]) ? $labels[$event_type] : ucfirst($event_type);
+    }
+
+    /**
+     * Get featured products section for email (legacy method for backward compatibility)
+     *
+     * @param object $gift (deprecated parameter, kept for backwards compatibility)
+     * @return string
+     */
+    private function get_featured_products_section($gift) {
+        return $this->get_featured_products_section_legacy();
     }
 }
