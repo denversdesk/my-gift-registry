@@ -60,6 +60,9 @@ class My_Gift_Registry {
         add_action('init', array($this, 'init'));
         add_action('admin_init', array($this, 'admin_init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+
+        // Template handling for wishlist URLs
+        add_filter('template_include', array($this, 'handle_template_include'), 10);
     }
 
     /**
@@ -88,16 +91,16 @@ class My_Gift_Registry {
         // Create required pages
         $this->create_required_pages();
 
-        // Flush rewrite rules
-        $rewrite_handler = new My_Gift_Registry_Rewrite_Handler();
-        $rewrite_handler->register_rewrite_rules();
-        flush_rewrite_rules();
+        // Setup rewrite rules with proper activation hook
+        do_action('my_gift_registry_activate');
 
         // Set default options
         add_option('my_gift_registry_version', MY_GIFT_REGISTRY_VERSION);
 
-        // Force flush rewrite rules on next admin init
-        set_transient('my_gift_registry_flush_rewrite_rules', true);
+        // Create a dedicated page for gift registry wishlists if it doesn't exist
+        $this->create_wishlist_display_page();
+
+        error_log('My Gift Registry: Plugin activated successfully with proper rewrite rules');
     }
 
     /**
@@ -122,6 +125,9 @@ class My_Gift_Registry {
         foreach ($pages as $page_data) {
             $this->create_page_if_not_exists($page_data);
         }
+
+        // Create wishlist display page
+        $this->create_wishlist_display_page();
     }
 
     /**
@@ -455,6 +461,89 @@ class My_Gift_Registry {
                 )
             ));
         }
+    }
+
+    /**
+     * Create a dedicated page for displaying gift registry wishlists
+     */
+    private function create_wishlist_display_page() {
+        // Check if page already exists
+        $existing_page = $this->get_page_by_title('Gift Registry - Wishlist Display');
+
+        if ($existing_page) {
+            // Page already exists, mark it for our shortcode
+            update_post_meta($existing_page->ID, '_my_gift_registry_shortcode_page', '1');
+            return $existing_page->ID;
+        }
+
+        // Create new page
+        $page_args = array(
+            'post_title'    => 'Gift Registry - Wishlist Display',
+            'post_content'  => '[gift_registry_wishlist]',
+            'post_name'     => 'gift-registry-wishlist-display',
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
+            'post_author'   => get_current_user_id() ?: 1,
+            'comment_status' => 'closed',
+            'ping_status'   => 'closed',
+        );
+
+        $page_id = wp_insert_post($page_args);
+
+        if (is_wp_error($page_id)) {
+            error_log('My Gift Registry: Failed to create wishlist display page: ' . $page_id->get_error_message());
+            return false;
+        } else {
+            // Mark this page for our shortcode
+            update_post_meta($page_id, '_my_gift_registry_shortcode_page', '1');
+            error_log('My Gift Registry: Successfully created wishlist display page (ID: ' . $page_id . ')');
+            return $page_id;
+        }
+    }
+
+    /**
+     * Custom template include for wishlist URLs
+     */
+    public function handle_template_include($template) {
+        $wishlist_slug = get_query_var('my_gift_registry_wishlist');
+
+        if (!empty($wishlist_slug)) {
+            // Get our shortcode page
+            $page_id = $this->find_shortcode_page();
+
+            if ($page_id) {
+                // Set the global post to our shortcode page
+                global $post;
+                $post = get_post($page_id);
+                setup_postdata($post);
+
+                // Return the page template
+                return get_page_template();
+            }
+        }
+
+        return $template;
+    }
+
+    /**
+     * Find our shortcode page using the meta marker
+     */
+    private function find_shortcode_page() {
+        $args = array(
+            'post_type'      => 'page',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'meta_query'     => array(
+                array(
+                    'key'     => '_my_gift_registry_shortcode_page',
+                    'value'   => '1',
+                    'compare' => '='
+                )
+            )
+        );
+
+        $pages = get_posts($args);
+        return !empty($pages) ? $pages[0] : null;
     }
 }
 
