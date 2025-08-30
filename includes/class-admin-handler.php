@@ -41,7 +41,7 @@ class My_Gift_Registry_Admin_Handler {
             'manage_options',
             'my-gift-registry',
             array($this, 'admin_page'),
-            'dashicons-gifts',
+            'dashicons-awards',
             26
         );
 
@@ -283,7 +283,7 @@ class My_Gift_Registry_Admin_Handler {
             array(
                 'title' => __('Total Gifts', 'my-gift-registry'),
                 'value' => $debug['gifts_count'],
-                'icon' => 'dashicons-gifts'
+                'icon' => 'dashicons-awards'
             ),
             array(
                 'title' => __('Total Reservations', 'my-gift-registry'),
