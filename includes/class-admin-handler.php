@@ -229,6 +229,7 @@ class My_Gift_Registry_Admin_Handler {
         <!-- Hidden template for products -->
         <script type="text/html" id="mgr-product-template">
             <div class="mgr-product-card" data-product-id="{{product_id}}">
+                <input type="hidden" name="mgr_selected_products[]" value="{{product_id}}">
                 <div class="mgr-product-remove">×</div>
                 <div class="mgr-product-image">
                     <img src="{{image_url}}" alt="{{title}}" onerror="this.src=''">

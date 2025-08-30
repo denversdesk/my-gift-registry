@@ -220,12 +220,29 @@
                 return;
             }
 
+            // Extract product details from search item
+            const imageUrl = $item.find('img').attr('src') || '';
+            const title = $item.find('.mgr-search-item-title').text().trim() || 'Unknown Product';
+            const priceHtml = $item.find('.mgr-search-item-price').html() || '$0.00';
+
+            // Add to selected products
             this.selectedProducts[productId] = productId;
+
+            // Hide search results and clear input
             $('.mgr-search-results').hide();
             $('#mgr-product-search').val('');
 
-            // Load fresh data for the new product
-            this.loadSelectedProductDetails();
+            // Append the product card to the grid
+            const html = this.productTemplate
+                .replace(/\{\{product_id\}\}/g, productId)
+                .replace(/\{\{image_url\}\}/g, imageUrl)
+                .replace(/\{\{title\}\}/g, title)
+                .replace(/\{\{price_html\}\}/g, priceHtml);
+
+            $('#mgr-selected-grid').append(html);
+
+            // Update product count
+            this.updateProductCount();
         }
 
         handleProductRemove(e) {
@@ -237,7 +254,8 @@
             if (confirm(this.strings.confirm_delete)) {
                 delete this.selectedProducts[productId];
                 $card.fadeOut('fast', () => {
-                    this.loadSelectedProductDetails();
+                    $card.remove();
+                    this.updateProductCount();
                 });
             }
         }
