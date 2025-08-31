@@ -29,6 +29,9 @@ class My_Gift_Registry_Ajax_Handler {
         // Phase 4 AJAX actions for product management
         add_action('wp_ajax_search_products', array($this, 'search_products'));
         add_action('wp_ajax_add_product', array($this, 'add_product'));
+
+        // Phase 5 AJAX action for gift deletion
+        add_action('wp_ajax_mgr_delete_gift', array($this, 'delete_gift'));
     }
 
     /**
@@ -521,6 +524,70 @@ class My_Gift_Registry_Ajax_Handler {
         wp_send_json_success(array(
             'message' => __('Product added successfully!', 'my-gift-registry'),
             'product_id' => $result
+        ));
+    }
+
+    /**
+     * Handle gift deletion AJAX request
+     */
+    public function delete_gift() {
+        // Verify nonce for security
+        check_ajax_referer('mgr_gift_delete_nonce', 'security');
+
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            wp_send_json_error(__('You must be logged in to delete gifts.', 'my-gift-registry'));
+            return;
+        }
+
+        $current_user = wp_get_current_user();
+        $gift_id = intval($_POST['gift_id']);
+
+        if (empty($gift_id)) {
+            wp_send_json_error(__('Invalid gift ID.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check if gift exists and get wishlist ownership
+        global $wpdb;
+        $gifts_table = $wpdb->prefix . 'my_gift_registry_gifts';
+        $wishlists_table = $wpdb->prefix . 'my_gift_registry_wishlists';
+
+        $gift_check = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT w.user_id, g.title FROM {$gifts_table} g
+                 JOIN {$wishlists_table} w ON g.wishlist_id = w.id
+                 WHERE g.id = %d",
+                $gift_id
+            )
+        );
+
+        if (!$gift_check) {
+            wp_send_json_error(__('Gift not found.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check if user owns the wishlist
+        if ($gift_check->user_id != $current_user->ID) {
+            wp_send_json_error(__('You do not have permission to delete this gift.', 'my-gift-registry'));
+            return;
+        }
+
+        // Delete the gift
+        $result = $wpdb->delete(
+            $gifts_table,
+            array('id' => $gift_id),
+            array('%d')
+        );
+
+        if ($result === false) {
+            wp_send_json_error(__('Failed to delete gift. Please try again.', 'my-gift-registry'));
+            return;
+        }
+
+        // Return success response
+        wp_send_json_success(array(
+            'message' => sprintf(__('Gift "%s" deleted successfully!', 'my-gift-registry'), $gift_check->title)
         ));
     }
 }

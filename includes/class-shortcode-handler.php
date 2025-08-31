@@ -159,7 +159,7 @@ class My_Gift_Registry_Shortcode_Handler {
         if (!empty($wishlist->gifts)) {
             echo '<div class="wishlist-items">';
             foreach ($wishlist->gifts as $gift) {
-                echo $this->render_gift_item($gift, $wishlist->slug);
+                echo $this->render_gift_item($gift, $wishlist->slug, $wishlist);
             }
             echo '</div>';
         } else {
@@ -176,6 +176,9 @@ class My_Gift_Registry_Shortcode_Handler {
 
         // Product addition modal
         echo $this->render_add_product_modal();
+
+        // Delete gift confirmation modal
+        echo $this->render_delete_gift_modal();
 
         return ob_get_clean();
     }
@@ -234,15 +237,20 @@ class My_Gift_Registry_Shortcode_Handler {
      *
      * @param object $gift
      * @param string $wishlist_slug
+     * @param object $wishlist
      * @return string
      */
-    private function render_gift_item($gift, $wishlist_slug) {
+    private function render_gift_item($gift, $wishlist_slug, $wishlist) {
         ob_start();
+
+        // Check if current user owns this wishlist
+        $is_owner = is_user_logged_in() && wp_get_current_user()->ID == $wishlist->user_id;
+
         ?>
         <div class="gift-item <?php echo $gift->is_reserved ? 'reserved' : ''; ?>" data-gift-id="<?php echo esc_attr($gift->id); ?>">
             <div class="gift-image">
                 <?php if (!empty($gift->image_url)) : ?>
-                    <img src="<?php echo esc_url($gift->image_url); ?>" alt="<?php echo esc_attr(stripcslashes($gift->title)); ?>">
+                    <img src="<?php echo esc_url($gift->image_url); ?>" alt="<?php echo esc_attr(stripslashes($gift->title)); ?>">
                 <?php else : ?>
                     <div class="no-image">📦</div>
                 <?php endif; ?>
@@ -253,6 +261,13 @@ class My_Gift_Registry_Shortcode_Handler {
                     </button>
                 <?php else : ?>
                     <div class="reserved-badge"><?php _e('Reserved', 'my-gift-registry'); ?></div>
+                <?php endif; ?>
+
+                <?php if ($is_owner) : ?>
+                    <button class="delete-gift-button" data-gift-id="<?php echo esc_attr($gift->id); ?>"
+                            data-gift-title="<?php echo esc_attr(stripslashes($gift->title)); ?>"
+                            data-gift-image="<?php echo esc_attr($gift->image_url); ?>"
+                            title="<?php _e('Delete this gift', 'my-gift-registry'); ?>">×</button>
                 <?php endif; ?>
             </div>
 
@@ -276,6 +291,116 @@ class My_Gift_Registry_Shortcode_Handler {
                 <?php endif; ?>
             </div>
         </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render delete gift confirmation modal
+     *
+     * @return string
+     */
+    private function render_delete_gift_modal() {
+        ob_start();
+        ?>
+        <div id="delete-gift-modal" class="delete-gift-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><?php _e('Delete Gift Confirmation', 'my-gift-registry'); ?></h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="mgr_gift_delete_nonce" value="<?php echo wp_create_nonce('mgr_gift_delete_nonce'); ?>">
+                    <div class="delete-confirmation-content">
+                        <p class="confirmation-text"><?php _e('Are you sure you want to delete this gift?', 'my-gift-registry'); ?></p>
+
+                        <div class="gift-preview">
+                            <div class="gift-image-preview">
+                                <img id="delete-gift-image" src="" alt="Gift Image" style="display: none;">
+                                <div id="delete-gift-no-image" class="no-image-preview">📦</div>
+                            </div>
+                            <div class="gift-info-preview">
+                                <h3 id="delete-gift-title">Gift Title</h3>
+                                <div class="delete-warning">
+                                    <strong><?php _e('Warning:', 'my-gift-registry'); ?></strong><br>
+                                    <?php _e('This action cannot be undone. The gift will be permanently removed from your wishlist.', 'my-gift-registry'); ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="cancel-delete-button"><?php _e('Cancel', 'my-gift-registry'); ?></button>
+                            <button type="button" class="confirm-delete-button" id="confirm-delete-gift">
+                                <?php _e('Delete Gift', 'my-gift-registry'); ?>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .delete-gift-modal .gift-preview {
+                display: flex;
+                gap: 20px;
+                align-items: flex-start;
+                margin: 20px 0;
+                padding: 20px;
+                border: 2px solid #f0f0f0;
+                border-radius: 8px;
+                background-color: #fafafa;
+            }
+
+            .delete-gift-modal .gift-image-preview {
+                flex-shrink: 0;
+                width: 80px;
+                height: 80px;
+                border-radius: 6px;
+                overflow: hidden;
+                background-color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #e0e0e0;
+            }
+
+            .delete-gift-modal .gift-image-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .delete-gift-modal .gift-info-preview {
+                flex-grow: 1;
+            }
+
+            .delete-gift-modal .gift-info-preview h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+                font-size: 18px;
+                font-weight: 600;
+            }
+
+            .delete-gift-modal .delete-warning {
+                background-color: #fff3cd;
+                border: 1px solid #ffeeba;
+                border-radius: 4px;
+                padding: 12px;
+                color: #856404;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            .delete-gift-modal .confirmation-text {
+                font-size: 16px;
+                text-align: center;
+                margin-bottom: 20px;
+                font-weight: 500;
+            }
+        </style>
+
         <?php
         return ob_get_clean();
     }

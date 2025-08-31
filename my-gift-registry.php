@@ -439,7 +439,7 @@ class My_Gift_Registry {
 
             wp_enqueue_script(
                 'my-gift-registry-script',
-                MY_GIFT_REGISTRY_PLUGIN_URL . 'assets/js/my-gift-registry-phase3.js',
+                MY_GIFT_REGISTRY_PLUGIN_URL . 'assets/js/my-gift-registry.js',
                 array('jquery'),
                 MY_GIFT_REGISTRY_VERSION,
                 true
