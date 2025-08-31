@@ -230,7 +230,7 @@
                 error: this.handleReservationError.bind(this),
                 complete: () => {
                     // Reset button state
-                    $submitButton.prop('disabled', false).text(originalText);
+                    // $submitButton.prop('disabled', false).text(originalText);
                 }
             });
         }
@@ -537,7 +537,7 @@
                 error: this.handleAddProductError.bind(this),
                 complete: () => {
                     // Reset button state
-                    $submitButton.removeClass('loading').prop('disabled', false);
+                    // $submitButton.removeClass('loading').prop('disabled', false);
                 }
             });
         }

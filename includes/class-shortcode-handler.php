@@ -242,7 +242,7 @@ class My_Gift_Registry_Shortcode_Handler {
         <div class="gift-item <?php echo $gift->is_reserved ? 'reserved' : ''; ?>" data-gift-id="<?php echo esc_attr($gift->id); ?>">
             <div class="gift-image">
                 <?php if (!empty($gift->image_url)) : ?>
-                    <img src="<?php echo esc_url($gift->image_url); ?>" alt="<?php echo esc_attr($gift->title); ?>">
+                    <img src="<?php echo esc_url($gift->image_url); ?>" alt="<?php echo esc_attr(stripcslashes($gift->title)); ?>">
                 <?php else : ?>
                     <div class="no-image">📦</div>
                 <?php endif; ?>
@@ -257,10 +257,10 @@ class My_Gift_Registry_Shortcode_Handler {
             </div>
 
             <div class="gift-details">
-                <h3 class="gift-title"><?php echo esc_html($gift->title); ?></h3>
+                <h3 class="gift-title"><?php echo esc_html(stripslashes($gift->title)); ?></h3>
 
                 <?php if (!empty($gift->description)) : ?>
-                    <p class="gift-description"><?php echo esc_html($gift->description); ?></p>
+                    <p class="gift-description"><?php echo esc_html(stripslashes($gift->description)); ?></p>
                 <?php endif; ?>
 
                 <?php if (!empty($gift->price)) : ?>

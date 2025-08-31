@@ -84,10 +84,10 @@ class My_Gift_Registry_Email_Handler {
                 .gift-content { display: flex; gap: 20px; }
                 .gift-image { flex-shrink: 0; }
                 .gift-image img { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #e9ecef; }
-                .gift-info { flex-grow: 1; }
+                .gift-info { flex-grow: 1; padding-left: 19px; }
                 .gift-info h3 { margin: 0 0 15px 0; font-size: 20px; color: #333; }
                 .gift-info .detail-row { margin-bottom: 8px; }
-                .gift-info .detail-row strong { color: #495057; width: 120px; display: inline-block; }
+                .gift-info .detail-row strong { color: #495057; width: 120px; }
                 .gift-info a { color: #007cba; text-decoration: none; font-weight: 600; }
                 .gift-info a:hover { text-decoration: underline; }
                 .reserver-info { background-color: #fff3cd; padding: 15px; margin-top: 20px; border-radius: 5px; border-left: 4px solid #ffc107; }
@@ -104,7 +104,7 @@ class My_Gift_Registry_Email_Handler {
                 .product-item .view-product-button { display: inline-block; background: #007cba; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: 500; font-size: 14px; }
                 .product-item .view-product-button:hover { background: #005a87; }
                 .search-link-section { text-align: center; padding: 30px 20px; background-color: #f8f9fa; }
-                .search-link { display: inline-block; background-color: #007cba; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; }
+                .search-link { display: inline-block; background-color: #691b61; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; }
                 .search-link:hover { background-color: #005a87; }
                 .footer { text-align: center; padding: 30px 20px 40px; background-color: white; border-top: 1px solid #eee; }
                 .footer p { margin: 5px 0; color: #6c757d; font-size: 12px; }
@@ -132,7 +132,8 @@ class My_Gift_Registry_Email_Handler {
                         <img src="<?php echo esc_url(get_site_icon_url()); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" class="logo" style="max-width: 64px;">
                         <?php
                     }
-                    ?>
+                    ?><br>
+                    <h1 style="margin: 10px 0 0; font-size: 24px; color: #333;"><?php _e('Gift Reservation Confirmation', 'my-gift-registry'); ?></h1>
                 </div>
 
                 <!-- Event Details Section -->
@@ -140,31 +141,31 @@ class My_Gift_Registry_Email_Handler {
                 <div class="event-details">
                     <h2><?php _e('Event Details', 'my-gift-registry'); ?></h2>
                     <div class="detail-row">
-                        <strong><?php _e('Event Title:', 'my-gift-registry'); ?></strong>
-                        <span><?php echo esc_html($wishlist->title); ?></span>
+                        <strong><?php _e('Event Title: ', 'my-gift-registry'); ?></strong>
+                        <span><?php echo esc_html(stripslashes($wishlist->title)); ?></span>
                     </div>
                     <?php if (!empty($wishlist->event_type)) : ?>
                     <div class="detail-row">
-                        <strong><?php _e('Event Type:', 'my-gift-registry'); ?></strong>
+                        <strong><?php _e('Event Type: ', 'my-gift-registry'); ?></strong>
                         <span><?php echo esc_html($this->get_event_type_label($wishlist->event_type)); ?></span>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($wishlist->event_date)) : ?>
                     <div class="detail-row">
-                        <strong><?php _e('Event Date:', 'my-gift-registry'); ?></strong>
+                        <strong><?php _e('Event Date: ', 'my-gift-registry'); ?></strong>
                         <span><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($wishlist->event_date))); ?></span>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($wishlist->full_name)) : ?>
                     <div class="detail-row">
-                        <strong><?php _e('Created by:', 'my-gift-registry'); ?></strong>
+                        <strong><?php _e('Created by: ', 'my-gift-registry'); ?></strong>
                         <span><?php echo esc_html($wishlist->full_name); ?></span>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($wishlist->description)) : ?>
                     <div class="detail-row">
-                        <strong><?php _e('Description:', 'my-gift-registry'); ?></strong>
-                        <span><?php echo esc_html($wishlist->description); ?></span>
+                        <strong><?php _e('Description: ', 'my-gift-registry'); ?></strong>
+                        <span><?php echo esc_html(stripslashes($wishlist->description)); ?></span>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -192,30 +193,30 @@ class My_Gift_Registry_Email_Handler {
                                 $gift_image_url = 'https://via.placeholder.com/120x120?text=No+Image';
                             }
                             ?>
-                            <img src="<?php echo esc_url($gift_image_url); ?>" alt="<?php echo esc_attr($gift->title); ?>" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px;">
+                            <img src="<?php echo esc_url($gift_image_url); ?>" alt="<?php echo esc_attr(stripslashes($gift->title)); ?>" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px;">
                         </div>
 
                         <!-- Gift Information -->
                         <div class="gift-info">
-                            <h3><?php echo esc_html($gift->title); ?></h3>
+                            <h3><?php echo esc_html(stripslashes($gift->title)); ?></h3>
 
                             <?php if (!empty($gift->description)) : ?>
                             <div class="detail-row">
-                                <strong><?php _e('Description:', 'my-gift-registry'); ?></strong>
-                                <span><?php echo esc_html($gift->description); ?></span>
+                                <strong><?php _e('Description: ', 'my-gift-registry'); ?></strong>
+                                <span><?php echo esc_html(stripslashes($gift->description)); ?></span>
                             </div>
                             <?php endif; ?>
 
                             <?php if (!empty($gift->price)) : ?>
                             <div class="detail-row">
-                                <strong><?php _e('Price:', 'my-gift-registry'); ?></strong>
+                                <strong><?php _e('Price: ', 'my-gift-registry'); ?></strong>
                                 <span><?php echo wc_price($gift->price); ?></span>
                             </div>
                             <?php endif; ?>
 
                             <?php if (!empty($gift->product_url)) : ?>
                             <div class="detail-row">
-                                <strong><?php _e('Product Link:', 'my-gift-registry'); ?></strong>
+                                <strong><?php _e('Product Link: ', 'my-gift-registry'); ?></strong>
                                 <a href="<?php echo esc_url($gift->product_url); ?>" target="_blank"><?php _e('View Product', 'my-gift-registry'); ?></a>
                             </div>
                             <?php endif; ?>
@@ -223,11 +224,11 @@ class My_Gift_Registry_Email_Handler {
                             <!-- Reservation Information -->
                             <div class="reserver-info">
                                 <div class="detail-row">
-                                    <strong><?php _e('Reserved by:', 'my-gift-registry'); ?></strong>
+                                    <strong><?php _e('Reserved by: ', 'my-gift-registry'); ?></strong>
                                     <span><?php echo esc_html($email); ?></span>
                                 </div>
                                 <div class="detail-row">
-                                    <strong><?php _e('Reserved on:', 'my-gift-registry'); ?></strong>
+                                    <strong><?php _e('Reserved on: ', 'my-gift-registry'); ?></strong>
                                     <span><?php echo current_time(get_option('date_format') . ' ' . get_option('time_format')); ?></span>
                                 </div>
                             </div>
@@ -240,7 +241,7 @@ class My_Gift_Registry_Email_Handler {
                 <!-- Search Link Section -->
                 <div class="search-link-section">
                     <?php
-                    $search_term = str_replace(' ', '+', $gift->title);
+                    $search_term = str_replace(' ', '+', stripslashes($gift->title));
                     $search_url = home_url('/?post_type=product&s=' . urlencode($search_term));
                     ?>
                     <a href="<?php echo esc_url($search_url); ?>" class="search-link">
