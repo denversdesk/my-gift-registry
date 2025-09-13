@@ -829,6 +829,7 @@
      * Create Wishlist Form Handler
      */
     function CreateWishlistForm() {
+        console.log('My Gift Registry: CreateWishlistForm constructor called');
         this.ajaxUrl = myGiftRegistryAjax.ajax_url;
         this.nonce = myGiftRegistryAjax.nonce;
         this.init();
@@ -843,7 +844,9 @@
         var self = this;
 
         // Real-time slug generation
+        console.log('My Gift Registry: Setting up event title input handler');
         $('#event_title').on('input', function() {
+            console.log('My Gift Registry: Event title input detected');
             self.generateSlug();
         });
 
@@ -863,7 +866,9 @@
     };
 
     CreateWishlistForm.prototype.generateSlug = function() {
+        console.log('My Gift Registry: generateSlug function called');
         var title = $('#event_title').val();
+        console.log('My Gift Registry: Event title value:', title);
         if (title.length === 0) {
             $('#wishlist_slug').val('');
             $('#slug-preview').text('');
@@ -948,7 +953,9 @@
     };
 
     CreateWishlistForm.prototype.updateSubmitButton = function() {
+        console.log('CreateWishlistForm: updateSubmitButton called');
         var isValid = this.isFormValid();
+        console.log('CreateWishlistForm: Setting submit button disabled to:', !isValid);
         $('#submit-wishlist').prop('disabled', !isValid);
     };
 
@@ -972,10 +979,22 @@
 
         // Check if slug is available
         var $status = $('#slug-status');
+        console.log('CreateWishlistForm validation check:', {
+            eventType: eventType,
+            eventTitle: eventTitle,
+            slug: slug,
+            fullName: fullName,
+            email: email,
+            emailValid: emailRegex.test(email),
+            slugStatus: $status.hasClass('error') ? 'error' : ($status.hasClass('loading') ? 'loading' : 'valid')
+        });
+
         if ($status.hasClass('error') || $status.hasClass('loading')) {
+            console.log('CreateWishlistForm validation failed: Slug validation error or loading');
             return false;
         }
 
+        console.log('CreateWishlistForm validation passed');
         return true;
     };
 
@@ -1579,6 +1598,33 @@
                 instance.checkDeleteButtons();
             } else {
                 console.error('My Gift Registry: myGiftRegistryAjax object not found!');
+            }
+
+            // Initialize create wishlist form if it exists
+            if ($('#create-wishlist-form').length > 0) {
+                console.log('My Gift Registry: Initializing CreateWishlistForm...');
+                new CreateWishlistForm();
+                if (typeof initializeMediaManager === 'function') {
+                    initializeMediaManager();
+                }
+                console.log('My Gift Registry: CreateWishlistForm initialized');
+            }
+
+            // Initialize edit wishlist form if it exists
+            if ($('#edit-wishlist-form').length > 0) {
+                console.log('My Gift Registry: Initializing EditWishlistForm...');
+                new EditWishlistForm();
+                if (typeof initializeMediaManager === 'function') {
+                    initializeMediaManager();
+                }
+                console.log('My Gift Registry: EditWishlistForm initialized');
+            }
+
+            // Initialize my wishlists page if it exists
+            if ($('.my-gift-registry-my-wishlists').length > 0) {
+                console.log('My Gift Registry: Initializing MyWishlistsManager...');
+                new MyWishlistsManager();
+                console.log('My Gift Registry: MyWishlistsManager initialized');
             }
         });
 
