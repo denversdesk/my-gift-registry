@@ -469,3 +469,178 @@
     border-color: #f5c6cb;
     color: #721c24;
 }
+
+/* Activity Log Styles */
+.mgr-recent-activity {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.mgr-activity-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.mgr-activity-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.mgr-activity-filters select,
+.mgr-activity-filters input[type="text"],
+.mgr-activity-filters input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 120px;
+}
+
+.mgr-activity-filters input[type="text"] {
+    min-width: 200px;
+}
+
+.mgr-activity-summary {
+    font-size: 14px;
+    color: #666;
+}
+
+.mgr-activity-table-container {
+    overflow-x: auto;
+}
+
+.mgr-activity-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mgr-activity-table th,
+.mgr-activity-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.mgr-activity-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.mgr-activity-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.mgr-activity-type {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.mgr-activity-type-wishlist_created {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mgr-activity-type-wishlist_updated {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.mgr-activity-type-gift_added {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.mgr-activity-type-gift_reserved {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.mgr-activity-type-gift_deleted {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.mgr-activity-type-wishlist_shared {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.mgr-activity-pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.mgr-activity-pagination .button {
+    background: #007cba;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.mgr-activity-pagination .button:hover {
+    background: #005a87;
+}
+
+.mgr-loading-indicator {
+    margin-left: 10px;
+    font-style: italic;
+    color: #666;
+}
+
+/* Responsive Activity Table */
+@media (max-width: 768px) {
+    .mgr-activity-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mgr-activity-filters {
+        justify-content: space-between;
+    }
+
+    .mgr-activity-filters select,
+    .mgr-activity-filters input[type="text"],
+    .mgr-activity-filters input[type="date"] {
+        min-width: auto;
+        flex: 1;
+    }
+
+    .mgr-activity-table th,
+    .mgr-activity-table td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .mgr-activity-table th:nth-child(1),
+    .mgr-activity-table td:nth-child(1) {
+        min-width: 120px;
+    }
+
+    .mgr-activity-table th:nth-child(2),
+    .mgr-activity-table td:nth-child(2) {
+        min-width: 100px;
+    }
+
+    .mgr-activity-table th:nth-child(4),
+    .mgr-activity-table td:nth-child(4) {
+        min-width: 200px;
+    }
+}

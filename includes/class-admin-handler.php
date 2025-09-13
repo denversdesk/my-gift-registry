@@ -29,6 +29,9 @@ class My_Gift_Registry_Admin_Handler {
         add_action('wp_ajax_mgr_update_event_type', array($this, 'ajax_update_event_type'));
         add_action('wp_ajax_mgr_delete_event_type', array($this, 'ajax_delete_event_type'));
         add_action('wp_ajax_mgr_get_event_types', array($this, 'ajax_get_event_types'));
+
+        // Activity log AJAX handler
+        add_action('wp_ajax_mgr_get_activity_logs', array($this, 'ajax_get_activity_logs'));
     }
 
     /**
@@ -311,8 +314,269 @@ class My_Gift_Registry_Admin_Handler {
      * Render recent activity
      */
     private function render_recent_activity() {
-        // This would show recent reservations, new wishlists, etc.
-        echo '<p>' . __('Recent activity will be displayed here.', 'my-gift-registry') . '</p>';
+        $db_handler = new My_Gift_Registry_DB_Handler();
+
+        // Get activity logs
+        $activity_data = $db_handler->get_recent_activity(10);
+        $logs = $activity_data['logs'];
+        $total_count = $activity_data['total_count'];
+
+        // Get activity types for filter
+        $activity_types = $db_handler->get_activity_types();
+
+        if (empty($logs)) {
+            echo '<p>' . __('No activity yet. Logs will appear here as users interact with wishlists.', 'my-gift-registry') . '</p>';
+            return;
+        }
+
+        // Filters and search
+        ?>
+        <div class="mgr-activity-controls">
+            <div class="mgr-activity-filters">
+                <select id="mgr-activity-type-filter">
+                    <option value=""><?php _e('All Activity Types', 'my-gift-registry'); ?></option>
+                    <?php foreach ($activity_types as $type => $label): ?>
+                        <option value="<?php echo esc_attr($type); ?>"><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+
+                <input type="text" id="mgr-activity-search" placeholder="<?php _e('Search activities...', 'my-gift-registry'); ?>" />
+
+                <input type="date" id="mgr-activity-date-from" />
+                <input type="date" id="mgr-activity-date-to" />
+
+                <button type="button" id="mgr-activity-filter-btn" class="button"><?php _e('Filter', 'my-gift-registry'); ?></button>
+                <button type="button" id="mgr-activity-clear-btn" class="button"><?php _e('Clear', 'my-gift-registry'); ?></button>
+            </div>
+
+            <div class="mgr-activity-summary">
+                <span><?php printf(__('Showing %d of %d activities', 'my-gift-registry'), count($logs), $total_count); ?></span>
+            </div>
+        </div>
+
+        <div class="mgr-activity-table-container">
+            <table class="wp-list-table widefat fixed striped mgr-activity-table">
+                <thead>
+                    <tr>
+                        <th><?php _e('Date', 'my-gift-registry'); ?></th>
+                        <th><?php _e('User', 'my-gift-registry'); ?></th>
+                        <th><?php _e('Activity Type', 'my-gift-registry'); ?></th>
+                        <th><?php _e('Details', 'my-gift-registry'); ?></th>
+                    </tr>
+                </thead>
+                <tbody id="mgr-activity-table-body">
+                    <?php foreach ($logs as $log): ?>
+                        <tr>
+                            <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($log->date_time))); ?></td>
+                            <td>
+                                <?php
+                                if ($log->user_id && $log->display_name) {
+                                    echo esc_html($log->display_name);
+                                    if ($log->user_email) {
+                                        echo '<br><small>' . esc_html($log->user_email) . '</small>';
+                                    }
+                                } else {
+                                    echo '<em>' . __('Anonymous', 'my-gift-registry') . '</em>';
+                                }
+                                ?>
+                            </td>
+                            <td>
+                                <span class="mgr-activity-type mgr-activity-type-<?php echo esc_attr($log->activity_type); ?>">
+                                    <?php echo esc_html($db_handler->format_activity_type_label($log->activity_type)); ?>
+                                </span>
+                            </td>
+                            <td><?php echo esc_html($log->details); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <div class="mgr-activity-pagination" id="mgr-activity-pagination">
+                <?php if ($total_count > 10): ?>
+                    <button type="button" id="mgr-load-more-activities" class="button" data-offset="10" data-limit="10">
+                        <?php _e('Load More', 'my-gift-registry'); ?>
+                    </button>
+                    <span id="mgr-loading-indicator" style="display: none;"><?php _e('Loading...', 'my-gift-registry'); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var currentFilters = {
+                limit: 10,
+                offset: 0,
+                activity_type: '',
+                search: '',
+                date_from: '',
+                date_to: ''
+            };
+
+            // Filter button click
+            $('#mgr-activity-filter-btn').on('click', function() {
+                currentFilters.activity_type = $('#mgr-activity-type-filter').val();
+                currentFilters.search = $('#mgr-activity-search').val();
+                currentFilters.date_from = $('#mgr-activity-date-from').val();
+                currentFilters.date_to = $('#mgr-activity-date-to').val();
+                currentFilters.offset = 0;
+
+                loadActivities();
+            });
+
+            // Clear button click
+            $('#mgr-activity-clear-btn').on('click', function() {
+                $('#mgr-activity-type-filter').val('');
+                $('#mgr-activity-search').val('');
+                $('#mgr-activity-date-from').val('');
+                $('#mgr-activity-date-to').val('');
+
+                currentFilters = {
+                    limit: 10,
+                    offset: 0,
+                    activity_type: '',
+                    search: '',
+                    date_from: '',
+                    date_to: ''
+                };
+
+                loadActivities();
+            });
+
+            // Load more button click
+            $('#mgr-load-more-activities').on('click', function() {
+                currentFilters.offset += currentFilters.limit;
+                loadMoreActivities();
+            });
+
+            function loadActivities() {
+                $('#mgr-loading-indicator').show();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'mgr_get_activity_logs',
+                        nonce: '<?php echo wp_create_nonce("mgr_admin_nonce"); ?>',
+                        filters: currentFilters
+                    },
+                    success: function(response) {
+                        $('#mgr-loading-indicator').hide();
+
+                        if (response.success) {
+                            updateActivityTable(response.data.logs);
+                            updatePagination(response.data);
+                        } else {
+                            alert('<?php _e('Error loading activities', 'my-gift-registry'); ?>');
+                        }
+                    },
+                    error: function() {
+                        $('#mgr-loading-indicator').hide();
+                        alert('<?php _e('Error loading activities', 'my-gift-registry'); ?>');
+                    }
+                });
+            }
+
+            function loadMoreActivities() {
+                $('#mgr-loading-indicator').show();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'mgr_get_activity_logs',
+                        nonce: '<?php echo wp_create_nonce("mgr_admin_nonce"); ?>',
+                        filters: currentFilters
+                    },
+                    success: function(response) {
+                        $('#mgr-loading-indicator').hide();
+
+                        if (response.success) {
+                            appendActivities(response.data.logs);
+                            updatePagination(response.data);
+                        } else {
+                            alert('<?php _e('Error loading more activities', 'my-gift-registry'); ?>');
+                        }
+                    },
+                    error: function() {
+                        $('#mgr-loading-indicator').hide();
+                        alert('<?php _e('Error loading more activities', 'my-gift-registry'); ?>');
+                    }
+                });
+            }
+
+            function updateActivityTable(logs) {
+                var tbody = $('#mgr-activity-table-body');
+                tbody.empty();
+
+                if (logs.length === 0) {
+                    tbody.append('<tr><td colspan="4"><?php _e('No activities found.', 'my-gift-registry'); ?></td></tr>');
+                    return;
+                }
+
+                $.each(logs, function(index, log) {
+                    var userInfo = '';
+                    if (log.user_id && log.display_name) {
+                        userInfo = log.display_name;
+                        if (log.user_email) {
+                            userInfo += '<br><small>' + log.user_email + '</small>';
+                        }
+                    } else {
+                        userInfo = '<em><?php _e('Anonymous', 'my-gift-registry'); ?></em>';
+                    }
+
+                    var row = '<tr>' +
+                        '<td>' + log.formatted_date + '</td>' +
+                        '<td>' + userInfo + '</td>' +
+                        '<td><span class="mgr-activity-type mgr-activity-type-' + log.activity_type + '">' + log.activity_type_label + '</span></td>' +
+                        '<td>' + log.details + '</td>' +
+                        '</tr>';
+
+                    tbody.append(row);
+                });
+            }
+
+            function appendActivities(logs) {
+                if (logs.length === 0) {
+                    $('#mgr-load-more-activities').hide();
+                    return;
+                }
+
+                var tbody = $('#mgr-activity-table-body');
+
+                $.each(logs, function(index, log) {
+                    var userInfo = '';
+                    if (log.user_id && log.display_name) {
+                        userInfo = log.display_name;
+                        if (log.user_email) {
+                            userInfo += '<br><small>' + log.user_email + '</small>';
+                        }
+                    } else {
+                        userInfo = '<em><?php _e('Anonymous', 'my-gift-registry'); ?></em>';
+                    }
+
+                    var row = '<tr>' +
+                        '<td>' + log.formatted_date + '</td>' +
+                        '<td>' + userInfo + '</td>' +
+                        '<td><span class="mgr-activity-type mgr-activity-type-' + log.activity_type + '">' + log.activity_type_label + '</span></td>' +
+                        '<td>' + log.details + '</td>' +
+                        '</tr>';
+
+                    tbody.append(row);
+                });
+            }
+
+            function updatePagination(data) {
+                $('.mgr-activity-summary').html('<?php _e('Showing', 'my-gift-registry'); ?> ' + data.logs.length + ' <?php _e('of', 'my-gift-registry'); ?> ' + data.total_count + ' <?php _e('activities', 'my-gift-registry'); ?>');
+
+                if (data.total_pages > 1 && (currentFilters.offset + currentFilters.limit) < data.total_count) {
+                    $('#mgr-load-more-activities').show().data('offset', currentFilters.offset + currentFilters.limit);
+                } else {
+                    $('#mgr-load-more-activities').hide();
+                }
+            }
+        });
+        </script>
+        <?php
     }
 
     /**
@@ -430,6 +694,64 @@ class My_Gift_Registry_Admin_Handler {
             'products' => $products
         ));
     }
+
+    /**
+     * Event Types Management Admin Page
+    /**
+     * AJAX handler for getting activity logs
+     */
+    public function ajax_get_activity_logs() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'mgr_admin_nonce')) {
+            wp_send_json_error(__('Security check failed.', 'my-gift-registry'));
+            return;
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Insufficient permissions.', 'my-gift-registry'));
+            return;
+        }
+
+        $filters = isset($_POST['filters']) ? $_POST['filters'] : array();
+        $db_handler = new My_Gift_Registry_DB_Handler();
+
+        // Get activity logs with filters
+        $args = array(
+            'limit' => isset($filters['limit']) ? intval($filters['limit']) : 10,
+            'offset' => isset($filters['offset']) ? intval($filters['offset']) : 0,
+            'activity_type' => isset($filters['activity_type']) ? sanitize_text_field($filters['activity_type']) : '',
+            'search' => isset($filters['search']) ? sanitize_text_field($filters['search']) : '',
+            'date_from' => isset($filters['date_from']) ? sanitize_text_field($filters['date_from']) : '',
+            'date_to' => isset($filters['date_to']) ? sanitize_text_field($filters['date_to']) : '',
+        );
+
+        $activity_data = $db_handler->get_activity_logs($args);
+
+        // Format the logs for JSON response
+        $formatted_logs = array();
+        foreach ($activity_data['logs'] as $log) {
+            $formatted_logs[] = array(
+                'id' => $log->id,
+                'user_id' => $log->user_id,
+                'display_name' => $log->display_name,
+                'user_email' => $log->user_email,
+                'activity_type' => $log->activity_type,
+                'activity_type_label' => $db_handler->format_activity_type_label($log->activity_type),
+                'details' => $log->details,
+                'date_time' => $log->date_time,
+                'formatted_date' => date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($log->date_time)),
+            );
+        }
+
+        wp_send_json_success(array(
+            'logs' => $formatted_logs,
+            'total_count' => $activity_data['total_count'],
+            'total_pages' => $activity_data['total_pages'],
+            'current_page' => $activity_data['current_page'],
+        ));
+    }
+
 
     /**
      * Event Types Management Admin Page

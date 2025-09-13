@@ -28,6 +28,11 @@ class My_Gift_Registry_DB_Handler {
     private $event_types_table;
 
     /**
+     * Activity log table name
+     */
+    private $activity_log_table;
+
+    /**
      * Constructor
      */
     public function __construct() {
@@ -35,6 +40,7 @@ class My_Gift_Registry_DB_Handler {
         $this->wishlist_table = $wpdb->prefix . 'my_gift_registry_wishlists';
         $this->reservations_table = $wpdb->prefix . 'my_gift_registry_reservations';
         $this->event_types_table = $wpdb->prefix . 'my_gift_registry_event_types';
+        $this->activity_log_table = $wpdb->prefix . 'my_gift_registry_activity_log';
     }
 
     /**
@@ -122,6 +128,19 @@ class My_Gift_Registry_DB_Handler {
             KEY is_active (is_active)
         ) $charset_collate;";
 
+        // Activity log table
+        $activity_log_sql = "CREATE TABLE {$this->activity_log_table} (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            user_id int(11) DEFAULT NULL,
+            activity_type varchar(100) NOT NULL,
+            details text,
+            date_time datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY activity_type (activity_type),
+            KEY date_time (date_time)
+        ) $charset_collate;";
+
         // Create tables one by one with error checking
         $result1 = dbDelta($wishlist_sql);
         error_log('My Gift Registry: Wishlist table creation result: ' . print_r($result1, true));
@@ -138,14 +157,18 @@ class My_Gift_Registry_DB_Handler {
         $result5 = dbDelta($event_types_sql);
         error_log('My Gift Registry: Event types table creation result: ' . print_r($result5, true));
 
+        $result6 = dbDelta($activity_log_sql);
+        error_log('My Gift Registry: Activity log table creation result: ' . print_r($result6, true));
+
         // Check if tables exist after creation
         $wishlist_exists = $this->table_exists($this->wishlist_table);
         $gifts_exists = $this->table_exists($gifts_table);
         $recommended_exists = $this->table_exists($recommended_products_table);
         $reservations_exists = $this->table_exists($this->reservations_table);
         $event_types_exists = $this->table_exists($this->event_types_table);
+        $activity_log_exists = $this->table_exists($this->activity_log_table);
 
-        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Recommended: ' . ($recommended_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No') . ', EventTypes: ' . ($event_types_exists ? 'Yes' : 'No'));
+        error_log('My Gift Registry: Table existence after creation - Wishlist: ' . ($wishlist_exists ? 'Yes' : 'No') . ', Gifts: ' . ($gifts_exists ? 'Yes' : 'No') . ', Recommended: ' . ($recommended_exists ? 'Yes' : 'No') . ', Reservations: ' . ($reservations_exists ? 'Yes' : 'No') . ', EventTypes: ' . ($event_types_exists ? 'Yes' : 'No') . ', ActivityLog: ' . ($activity_log_exists ? 'Yes' : 'No'));
 
         // Insert sample data for testing only if wishlist table exists
         if ($wishlist_exists) {
@@ -287,9 +310,11 @@ class My_Gift_Registry_DB_Handler {
             'wishlist_table_exists' => $this->table_exists($this->wishlist_table),
             'gifts_table_exists' => $this->table_exists($gifts_table),
             'reservations_table_exists' => $this->table_exists($this->reservations_table),
+            'activity_log_table_exists' => $this->table_exists($this->activity_log_table),
             'wishlist_count' => $this->table_exists($this->wishlist_table) ? $wpdb->get_var("SELECT COUNT(*) FROM {$this->wishlist_table}") : 0,
             'gifts_count' => $this->table_exists($gifts_table) ? $wpdb->get_var("SELECT COUNT(*) FROM {$gifts_table}") : 0,
             'reservations_count' => $this->table_exists($this->reservations_table) ? $wpdb->get_var("SELECT COUNT(*) FROM {$this->reservations_table}") : 0,
+            'activity_log_count' => $this->table_exists($this->activity_log_table) ? $wpdb->get_var("SELECT COUNT(*) FROM {$this->activity_log_table}") : 0,
         );
 
         return $debug;
@@ -408,6 +433,13 @@ class My_Gift_Registry_DB_Handler {
         }
 
         $wishlist_id = $wpdb->insert_id;
+
+        // Log activity
+        $this->log_activity(
+            $insert_data['user_id'],
+            'wishlist_created',
+            sprintf(__('Created wishlist "%s"', 'my-gift-registry'), $insert_data['title'])
+        );
 
         return $wishlist_id;
     }
@@ -550,6 +582,23 @@ class My_Gift_Registry_DB_Handler {
 
         if ($result === false) {
             return new WP_Error('db_error', __('Failed to delete wishlist.', 'my-gift-registry'));
+        }
+
+        // Log activity
+        $this->log_activity(
+            $user_id,
+            'wishlist_updated',
+            __('Updated wishlist details', 'my-gift-registry')
+        );
+
+        // Log activity before deleting
+        $wishlist = $this->get_user_wishlist($wishlist_id, $user_id);
+        if ($wishlist) {
+            $this->log_activity(
+                $user_id,
+                'wishlist_deleted',
+                sprintf(__('Deleted wishlist "%s"', 'my-gift-registry'), $wishlist->title)
+            );
         }
 
         return true;
@@ -791,6 +840,16 @@ class My_Gift_Registry_DB_Handler {
         }
 
         $gift_id = $wpdb->insert_id;
+
+        // Log activity
+        $wishlist = $this->get_wishlist_by_id($wishlist_id);
+        if ($wishlist) {
+            $this->log_activity(
+                $wishlist->user_id,
+                'gift_added',
+                sprintf(__('Added gift "%s" to wishlist "%s"', 'my-gift-registry'), $product_data['title'], $wishlist->title)
+            );
+        }
 
         return $gift_id;
     }
@@ -1238,5 +1297,206 @@ class My_Gift_Registry_DB_Handler {
         );
 
         return $results ?: array();
+    }
+    /**
+     * Log an activity
+     *
+     * @param int $user_id User ID who performed the action
+     * @param string $activity_type Type of activity
+     * @param string $details Details about the activity
+     * @return bool|WP_Error
+     */
+    public function log_activity($user_id = null, $activity_type, $details = '') {
+        global $wpdb;
+
+        // Validate required fields
+        if (empty($activity_type)) {
+            return new WP_Error('missing_activity_type', __('Activity type is required.', 'my-gift-registry'));
+        }
+
+        // Prepare data for insertion
+        $insert_data = array(
+            'user_id' => $user_id ? intval($user_id) : null,
+            'activity_type' => sanitize_text_field($activity_type),
+            'details' => sanitize_textarea_field($details),
+        );
+
+        // Insert activity log
+        $result = $wpdb->insert(
+            $this->activity_log_table,
+            $insert_data,
+            array('%d', '%s', '%s')
+        );
+
+        if ($result === false) {
+            return new WP_Error('db_error', __('Failed to log activity.', 'my-gift-registry'));
+        }
+
+        return true;
+    }
+
+    /**
+     * Get activity logs with pagination and filtering
+     *
+     * @param array $args Query arguments
+     * @return array
+     */
+    public function get_activity_logs($args = array()) {
+        global $wpdb;
+
+        $defaults = array(
+            'limit' => 10,
+            'offset' => 0,
+            'activity_type' => '',
+            'user_id' => '',
+            'date_from' => '',
+            'date_to' => '',
+            'search' => '',
+        );
+
+        $args = wp_parse_args($args, $defaults);
+
+        // Build WHERE clauses
+        $where = array();
+        $where_data = array();
+
+        if (!empty($args['activity_type'])) {
+            $where[] = 'activity_type = %s';
+            $where_data[] = $args['activity_type'];
+        }
+
+        if (!empty($args['user_id'])) {
+            $where[] = 'user_id = %d';
+            $where_data[] = intval($args['user_id']);
+        }
+
+        if (!empty($args['date_from'])) {
+            $where[] = 'DATE(date_time) >= %s';
+            $where_data[] = $args['date_from'];
+        }
+
+        if (!empty($args['date_to'])) {
+            $where[] = 'DATE(date_time) <= %s';
+            $where_data[] = $args['date_to'];
+        }
+
+        if (!empty($args['search'])) {
+            $where[] = '(details LIKE %s OR activity_type LIKE %s)';
+            $where_data[] = '%' . $wpdb->esc_like($args['search']) . '%';
+            $where_data[] = '%' . $wpdb->esc_like($args['search']) . '%';
+        }
+
+        $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // Build query
+        $query = $wpdb->prepare(
+            "SELECT a.*, u.display_name, u.user_email
+             FROM {$this->activity_log_table} a
+             LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
+             {$where_clause}
+             ORDER BY a.date_time DESC
+             LIMIT %d OFFSET %d",
+            array_merge($where_data, array($args['limit'], $args['offset']))
+        );
+
+        $logs = $wpdb->get_results($query);
+
+        // Get total count for pagination
+        $count_query = $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->activity_log_table} a {$where_clause}",
+            $where_data
+        );
+        $total_count = $wpdb->get_var($count_query);
+
+        return array(
+            'logs' => $logs,
+            'total_count' => $total_count,
+            'total_pages' => ceil($total_count / $args['limit']),
+            'current_page' => floor($args['offset'] / $args['limit']) + 1,
+        );
+    }
+
+    /**
+     * Get activity type options for filtering
+     *
+     * @return array
+     */
+    public function get_activity_types() {
+        global $wpdb;
+
+        $types = $wpdb->get_col("SELECT DISTINCT activity_type FROM {$this->activity_log_table} ORDER BY activity_type");
+
+        $activity_types = array();
+        foreach ($types as $type) {
+            $activity_types[$type] = $this->format_activity_type_label($type);
+        }
+
+        return $activity_types;
+    }
+
+    /**
+     * Format activity type for display
+     *
+     * @param string $activity_type
+     * @return string
+     */
+    public function format_activity_type_label($activity_type) {
+        $labels = array(
+            'wishlist_created' => __('Wishlist Created', 'my-gift-registry'),
+            'wishlist_updated' => __('Wishlist Updated', 'my-gift-registry'),
+            'gift_added' => __('Gift Added', 'my-gift-registry'),
+            'gift_reserved' => __('Gift Reserved', 'my-gift-registry'),
+            'gift_deleted' => __('Gift Deleted', 'my-gift-registry'),
+            'wishlist_shared' => __('Wishlist Shared', 'my-gift-registry'),
+        );
+
+        return isset($labels[$activity_type]) ? $labels[$activity_type] : ucwords(str_replace('_', ' ', $activity_type));
+    }
+
+    /**
+     * Get recent activity summary for dashboard
+     *
+     * @param int $limit Number of activities to return
+     * @return array
+     */
+    public function get_recent_activity($limit = 10) {
+        return $this->get_activity_logs(array(
+            'limit' => $limit,
+            'offset' => 0,
+        ));
+    }
+
+    /**
+     * Log wishlist sharing activity
+     *
+     * @param int $wishlist_id
+     * @param int $user_id User who shared the wishlist
+     * @param string $share_method Method of sharing (email, social, etc.)
+     * @return bool
+     */
+    public function log_wishlist_shared($wishlist_id, $user_id, $share_method = 'link') {
+        $wishlist = $this->get_user_wishlist($wishlist_id, $user_id);
+        if (!$wishlist) {
+            return false;
+        }
+
+        return $this->log_activity(
+            $user_id,
+            'wishlist_shared',
+            sprintf(__('Shared wishlist "%s" via %s', 'my-gift-registry'), $wishlist->title, $share_method)
+        );
+    }
+
+    /**
+     * Add custom activity logging hook
+     * Allows other developers to log custom activities
+     *
+     * @param int|null $user_id
+     * @param string $activity_type
+     * @param string $details
+     * @return bool
+     */
+    public function log_custom_activity($user_id = null, $activity_type, $details = '') {
+        return $this->log_activity($user_id, $activity_type, $details);
     }
 }

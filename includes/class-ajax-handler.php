@@ -98,6 +98,13 @@ class My_Gift_Registry_Ajax_Handler {
             return;
         }
 
+        // Log the reservation activity
+        $db_handler->log_activity(
+            null, // No user ID for anonymous reservations
+            'gift_reserved',
+            sprintf(__('Gift "%s" from wishlist "%s" was reserved by %s', 'my-gift-registry'), $gift->gift_title, $gift->wishlist_title, $email)
+        );
+
         // Send confirmation email
         $email_handler = new My_Gift_Registry_Email_Handler();
         $email_sent = $email_handler->send_reservation_confirmation($email, $gift);

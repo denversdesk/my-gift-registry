@@ -1020,7 +1020,7 @@
 
                     // Show success message with link to wishlist
                     if (response.data.wishlist_url) {
-                        $status.append('<br><a href="' + response.data.wishlist_url + '" target="_blank">View Your Wishlist →</a>');
+                        $status.append('<br><a href="' + response.data.wishlist_url + '" target="_self">View Your Wishlist →</a>');
                     }
 
                     // Optional: redirect after a delay
