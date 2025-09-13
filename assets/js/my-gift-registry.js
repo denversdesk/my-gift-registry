@@ -1544,28 +1544,6 @@
         }, 3000);
     }
 
-    // Initialize when document is ready
-    $(document).ready(function() {
-        new MyGiftRegistry();
-
-        // Initialize create wishlist form if it exists
-        if ($('#create-wishlist-form').length > 0) {
-            new CreateWishlistForm();
-            initializeMediaManager();
-        }
-
-        // Initialize edit wishlist form if it exists
-        if ($('#edit-wishlist-form').length > 0) {
-            new EditWishlistForm();
-            initializeMediaManager();
-        }
-
-        // Initialize my wishlists page if it exists
-        if ($('.my-gift-registry-my-wishlists').length > 0) {
-            new MyWishlistsManager();
-        }
-    });
-
     // Function to replace a <code> tag with a <div> tag within a specified parent
         function replaceCodeWithDiv(parentElementClass) {
             const parentElement = document.querySelector(parentElementClass);
