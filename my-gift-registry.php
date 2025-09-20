@@ -3,7 +3,7 @@
  * Plugin Name: My Gift Registry
  * Plugin URI: https://storefront.co.zw/
  * Description: A comprehensive gift registry plugin for WordPress with wishlist management and reservation system.
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: Denver Chiwakira
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MY_GIFT_REGISTRY_VERSION', '1.1.1');
+define('MY_GIFT_REGISTRY_VERSION', '1.1.2');
 define('MY_GIFT_REGISTRY_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MY_GIFT_REGISTRY_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MY_GIFT_REGISTRY_PLUGIN_BASENAME', plugin_basename(__FILE__));

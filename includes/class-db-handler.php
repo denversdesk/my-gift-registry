@@ -688,11 +688,35 @@ class My_Gift_Registry_DB_Handler {
 
         return $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT g.*, w.title as wishlist_title, w.slug as wishlist_slug
+                "SELECT g.*, w.title as wishlist_title, w.slug as wishlist_slug, w.user_email as owner_email
                  FROM {$gifts_table} g
                  JOIN {$this->wishlist_table} w ON g.wishlist_id = w.id
                  WHERE g.id = %d",
                 $gift_id
+            )
+        );
+    }
+
+    /**
+     * Get wishlist gifts with reservation status
+     *
+     * @param int $wishlist_id
+     * @return array
+     */
+    public function get_wishlist_gifts_with_reservation_status($wishlist_id) {
+        global $wpdb;
+
+        $gifts_table = $wpdb->prefix . 'my_gift_registry_gifts';
+        $reservations_table = $wpdb->prefix . 'my_gift_registry_reservations';
+
+        return $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT g.*, CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_reserved
+                 FROM {$gifts_table} g
+                 LEFT JOIN {$reservations_table} r ON g.id = r.gift_id
+                 WHERE g.wishlist_id = %d
+                 ORDER BY g.priority ASC, g.created_at ASC",
+                $wishlist_id
             )
         );
     }

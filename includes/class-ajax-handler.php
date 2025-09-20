@@ -105,14 +105,18 @@ class My_Gift_Registry_Ajax_Handler {
             sprintf(__('Gift "%s" from wishlist "%s" was reserved by %s', 'my-gift-registry'), $gift->title, $gift->wishlist_title, $email)
         );
 
-        // Send confirmation email
+        // Send confirmation email to reserver
         $email_handler = new My_Gift_Registry_Email_Handler();
         $email_sent = $email_handler->send_reservation_confirmation($email, $gift);
+
+        // Send congratulation email to wishlist owner
+        $owner_email_sent = $email_handler->send_owner_congratulation_email($gift->owner_email, $gift);
 
         // Return success response
         wp_send_json_success(array(
             'message' => __('Gift reserved successfully!', 'my-gift-registry'),
-            'email_sent' => $email_sent
+            'email_sent' => $email_sent,
+            'owner_email_sent' => $owner_email_sent
         ));
     }
 

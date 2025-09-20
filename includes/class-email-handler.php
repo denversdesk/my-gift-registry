@@ -55,6 +55,141 @@ class My_Gift_Registry_Email_Handler {
     }
 
     /**
+     * Send congratulation email to wishlist owner
+     *
+     * @param string $owner_email
+     * @param object $gift
+     * @return bool
+     */
+    public function send_owner_congratulation_email($owner_email, $gift) {
+        $subject = __('Congratulations! A Gift from Your Wishlist Was Reserved', 'my-gift-registry');
+
+        // Get wishlist details
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $wishlist = $db_handler->get_wishlist_by_slug($gift->wishlist_slug);
+
+        // Store wishlist info for use in email content generation
+        $this->currentWishlist = $wishlist;
+
+        // Prepare email content
+        $message = $this->get_owner_congratulation_email_content($gift, $wishlist);
+
+        // Set email headers
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+        );
+
+        // Send the email
+        $sent = wp_mail($owner_email, $subject, $message, $headers);
+
+        // Log the email for debugging if needed
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('My Gift Registry - Owner congratulation email sent to: ' . $owner_email . ' - Status: ' . ($sent ? 'Success' : 'Failed'));
+        }
+
+        return $sent;
+    }
+
+    /**
+     * Get owner congratulation email content
+     *
+     * @param object $gift
+     * @param object $wishlist
+     * @return string
+     */
+    private function get_owner_congratulation_email_content($gift, $wishlist) {
+        $db_handler = new My_Gift_Registry_DB_Handler();
+        $all_gifts = $db_handler->get_wishlist_gifts_with_reservation_status($wishlist->id);
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title><?php _e('Gift Reservation Notification', 'my-gift-registry'); ?></title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+                .container { max-width: 650px; margin: 0 auto; background-color: white; }
+                .logo-section { text-align: center; padding: 30px 20px 20px; background-color: #ffffff; border-bottom: 1px solid #eee; }
+                .logo { max-width: 180px; height: auto; }
+                .congratulation-section { background-color: #d4edda; padding: 25px 20px; margin-bottom: 10px; border-left: 4px solid #28a745; }
+                .congratulation-section h2 { margin: 0 0 15px 0; color: #155724; font-size: 20px; }
+                .reserved-gift { background-color: white; padding: 20px; margin-bottom: 20px; border-left: 4px solid #ffc107; }
+                .reserved-gift h3 { margin: 0 0 15px 0; color: #856404; font-size: 18px; }
+                .gifts-list { background-color: #f8f9fa; padding: 25px; margin-bottom: 20px; }
+                .gifts-list h3 { margin: 0 0 20px 0; color: #495057; font-size: 18px; }
+                .gift-item { margin-bottom: 10px; padding: 10px; background: white; border-radius: 5px; }
+                .gift-item.reserved { border-left: 4px solid #28a745; }
+                .gift-item.reserved span { text-decoration: line-through; }
+                .gift-item.not-reserved { border-left: 4px solid #dc3545; font-weight: bold; }
+                .footer { text-align: center; padding: 30px 20px 40px; background-color: white; border-top: 1px solid #eee; }
+                .footer p { margin: 5px 0; color: #6c757d; font-size: 12px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <!-- Site Logo Section -->
+                <div class="logo-section">
+                    <?php
+                    $logo_url = get_custom_logo() ? wp_get_attachment_image_url(get_theme_mod('custom_logo'), 'full') : '';
+                    if ($logo_url) {
+                        ?>
+                        <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" class="logo">
+                        <?php
+                    } else {
+                        ?>
+                        <img src="<?php echo esc_url(get_site_icon_url()); ?>" alt="<?php echo esc_attr(get_bloginfo('name')); ?>" class="logo" style="max-width: 64px;">
+                        <?php
+                    }
+                    ?><br>
+                    <h1 style="margin: 10px 0 0; font-size: 24px; color: #333;"><?php _e('Congratulations!', 'my-gift-registry'); ?></h1>
+                </div>
+
+                <!-- Congratulation Section -->
+                <div class="congratulation-section">
+                    <h2><?php _e('🎉 Great News!', 'my-gift-registry'); ?></h2>
+                    <p><?php printf(__('Someone has reserved a gift from your wishlist "%s". Congratulations on this successful reservation!', 'my-gift-registry'), esc_html(stripslashes($wishlist->title))); ?></p>
+                </div>
+
+                <!-- Reserved Gift Details -->
+                <div class="reserved-gift">
+                    <h3><?php _e('Reserved Gift:', 'my-gift-registry'); ?></h3>
+                    <p><strong><?php echo esc_html(stripslashes($gift->title)); ?></strong></p>
+                    <?php if (!empty($gift->description)) : ?>
+                        <p><?php echo esc_html(stripslashes($gift->description)); ?></p>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Current Gifts Status -->
+                <div class="gifts-list">
+                    <h3><?php _e('📋 Your Wishlist Status', 'my-gift-registry'); ?></h3>
+                    <p><?php _e('Here\'s the current status of all gifts in your wishlist:', 'my-gift-registry'); ?></p>
+                    <?php foreach ($all_gifts as $list_gift) : ?>
+                        <div class="gift-item <?php echo $list_gift->is_reserved ? 'reserved' : 'not-reserved'; ?>">
+                            <?php if ($list_gift->is_reserved) : ?>
+                                ✅ <span><?php echo esc_html(stripslashes($list_gift->title)); ?></span>
+                            <?php else : ?>
+                                <strong><?php echo esc_html(stripslashes($list_gift->title)); ?></strong>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer">
+                    <p><?php _e('This email was sent by', 'my-gift-registry'); ?> <?php echo get_bloginfo('name'); ?></p>
+                    <p><?php _e('If you have any questions, please contact us.', 'my-gift-registry'); ?></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
      * Get reservation email content
      *
      * @param string $email
