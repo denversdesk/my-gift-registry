@@ -385,7 +385,7 @@ class My_Gift_Registry_Admin_Handler {
                                     <?php echo esc_html($db_handler->format_activity_type_label($log->activity_type)); ?>
                                 </span>
                             </td>
-                            <td><?php echo esc_html($log->details); ?></td>
+                            <td><?php echo esc_html(stripslashes($log->details)); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
