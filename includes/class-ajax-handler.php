@@ -102,7 +102,7 @@ class My_Gift_Registry_Ajax_Handler {
         $db_handler->log_activity(
             null, // No user ID for anonymous reservations
             'gift_reserved',
-            sprintf(__('Gift "%s" from wishlist "%s" was reserved by %s', 'my-gift-registry'), $gift->gift_title, $gift->wishlist_title, $email)
+            sprintf(__('Gift "%s" from wishlist "%s" was reserved by %s', 'my-gift-registry'), $gift->title, $gift->wishlist_title, $email)
         );
 
         // Send confirmation email
